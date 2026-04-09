@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sticky Note</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
+
+    :root {
+      --yellow: #FFF176;
+      --yellow-dark: #F9E84A;
+      --yellow-shadow: rgba(180, 160, 0, 0.18);
+      --ink: #3a3000;
+      --ink-light: #7a6800;
+      --tape: rgba(200,220,255,0.55);
+      --bg: #f0ede6;
+      --saved-green: #4caf50;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 18px 14px 14px;
+      background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c8b96e' fill-opacity='0.07'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
+    }
+
+    /* Tape piece at top */
+    .tape {
+      width: 52px;
+      height: 16px;
+      background: var(--tape);
+      border-radius: 2px;
+      margin-bottom: -8px;
+      position: relative;
+      z-index: 2;
+      backdrop-filter: blur(2px);
+      border: 1px solid rgba(180,200,255,0.3);
+    }
+
+    .note-card {
+      background: var(--yellow);
+      width: 100%;
+      max-width: 340px;
+      border-radius: 2px 2px 6px 2px;
+      box-shadow:
+        2px 3px 0 var(--yellow-dark),
+        4px 6px 16px var(--yellow-shadow),
+        0 1px 0 rgba(255,255,255,0.6) inset;
+      padding: 14px 14px 12px;
+      position: relative;
+      /* folded corner */
+    }
+
+    .note-card::after {
+      content: '';
+      position: absolute;
+      bottom: 0; right: 0;
+      width: 22px; height: 22px;
+      background: linear-gradient(225deg, var(--bg) 50%, var(--yellow-dark) 50%);
+      border-radius: 0 0 6px 0;
+    }
+
+    .note-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      gap: 8px;
+    }
+
+    .meeting-title {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink-light);
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      line-height: 1.3;
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .meeting-date {
+      font-size: 10px;
+      color: var(--ink-light);
+      white-space: nowrap;
+      opacity: 0.7;
+      flex-shrink: 0;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, var(--yellow-dark), transparent);
+      margin-bottom: 10px;
+      opacity: 0.6;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 180px;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: 'Caveat', cursive;
+      font-size: 17px;
+      line-height: 1.7;
+      color: var(--ink);
+      caret-color: var(--ink);
+      padding: 0;
+      /* lined paper effect */
+      background-image: repeating-linear-gradient(
+        transparent,
+        transparent 28px,
+        rgba(180,160,0,0.13) 28px,
+        rgba(180,160,0,0.13) 29px
+      );
+      background-size: 100% 29px;
+    }
+
+    textarea::placeholder {
+      color: rgba(90,70,0,0.28);
+      font-style: italic;
+    }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 10px;
+      padding-top: 8px;
+    }
+
+    .status {
+      font-size: 10px;
+      color: var(--ink-light);
+      opacity: 0.6;
+      font-style: italic;
+      transition: opacity 0.3s;
+    }
+
+    .status.saved {
+      color: var(--saved-green);
+      opacity: 0.9;
+    }
+
+    .status.saving {
+      opacity: 0.8;
+    }
+
+    .clear-btn {
+      background: none;
+      border: 1px solid rgba(120,100,0,0.2);
+      border-radius: 3px;
+      padding: 3px 8px;
+      font-size: 10px;
+      font-family: 'DM Sans', sans-serif;
+      color: var(--ink-light);
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.2s, background 0.2s;
+    }
+
+    .clear-btn:hover {
+      opacity: 1;
+      background: rgba(180,150,0,0.1);
+    }
+
+    .error-banner {
+      background: #fff3cd;
+      border: 1px solid #ffc107;
+      border-radius: 4px;
+      padding: 8px 10px;
+      font-size: 11px;
+      color: #856404;
+      margin-top: 10px;
+      display: none;
+      width: 100%;
+      max-width: 340px;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(240,237,230,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 100;
+    }
+
+    .loading-dot {
+      width: 8px; height: 8px;
+      background: var(--ink-light);
+      border-radius: 50%;
+      animation: bounce 0.8s ease-in-out infinite;
+      display: inline-block;
+      margin: 0 3px;
+    }
+    .loading-dot:nth-child(2) { animation-delay: 0.15s; }
+    .loading-dot:nth-child(3) { animation-delay: 0.3s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+      40% { transform: translateY(-6px); opacity: 1; }
+    }
+
+    .loading-text {
+      font-size: 12px;
+      color: var(--ink-light);
+      font-style: italic;
+    }
+
+    /* Series badge */
+    .series-badge {
+      display: inline-block;
+      background: rgba(180,150,0,0.12);
+      border: 1px solid rgba(180,150,0,0.25);
+      border-radius: 3px;
+      padding: 1px 5px;
+      font-size: 9px;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--ink-light);
+      margin-left: 4px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div>
+    <span class="loading-dot"></span>
+    <span class="loading-dot"></span>
+    <span class="loading-dot"></span>
+  </div>
+  <div class="loading-text">Loading your note…</div>
+</div>
+
+<div class="tape"></div>
+
+<div class="note-card">
+  <div class="note-header">
+    <div class="meeting-title" id="meetingTitle">Loading…</div>
+    <div class="meeting-date" id="meetingDate"></div>
+  </div>
+  <div class="divider"></div>
+  <textarea
+    id="noteText"
+    placeholder="jot something down…&#10;• agenda items&#10;• questions to ask&#10;• follow-ups"
+    spellcheck="true"
+  ></textarea>
+  <div class="footer">
+    <span class="status" id="statusText">—</span>
+    <button class="clear-btn" id="clearBtn">clear</button>
+  </div>
+</div>
+
+<div class="error-banner" id="errorBanner"></div>
+
+<script>
+  // ── Constants ──────────────────────────────────────────────────────────────
+  const STORAGE_KEY = 'outlookStickyNotes_v1';
+  const AUTOSAVE_DELAY = 900; // ms
+
+  // ── State ──────────────────────────────────────────────────────────────────
+  let currentMeetingKey = null;
+  let saveTimer = null;
+  let msalToken = null;
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function formatDate(date) {
+    if (!date) return '';
+    const d = new Date(date);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function setStatus(msg, cls = '') {
+    const el = document.getElementById('statusText');
+    el.textContent = msg;
+    el.className = 'status ' + cls;
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBanner');
+    el.textContent = msg;
+    el.style.display = 'block';
+  }
+
+  function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+  }
+
+  // ── Meeting key generation ─────────────────────────────────────────────────
+  // Uses itemId for specific instances, ensuring series recurrences are separate
+  function getMeetingKey(item) {
+    // item.itemId is unique per occurrence for recurring series
+    // Fallback to subject+start if itemId unavailable
+    if (item.itemId) return 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g, '').slice(0, 40);
+    const fallback = (item.subject || '') + '_' + (item.start?.getTime?.() || '');
+    return 'mtg_' + btoa(encodeURIComponent(fallback)).replace(/[^a-zA-Z0-9]/g, '').slice(0, 40);
+  }
+
+  // ── OneDrive storage ───────────────────────────────────────────────────────
+  const ONEDRIVE_FILE = 'outlookStickyNotes.json';
+  const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
+
+  async function getToken() {
+    return new Promise((resolve, reject) => {
+      Office.context.auth.getAccessTokenAsync({ allowSignInPrompt: true }, (result) => {
+        if (result.status === Office.AsyncResultStatus.Succeeded) resolve(result.value);
+        else reject(result.error);
+      });
+    });
+  }
+
+  async function graphRequest(method, path, body = null) {
+    const token = await getToken();
+    const opts = {
+      method,
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Content-Type': 'application/json'
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(GRAPH_BASE + path, opts);
+    if (!res.ok && res.status !== 404) throw new Error('Graph error ' + res.status);
+    if (res.status === 404) return null;
+    if (res.status === 204) return null;
+    const text = await res.text();
+    return text ? JSON.parse(text) : null;
+  }
+
+  async function loadAllNotes() {
+    try {
+      // Try to get the file from OneDrive AppFolder
+      const data = await graphRequest('GET', `/me/drive/special/approot:/${ONEDRIVE_FILE}:/content`);
+      if (!data) return {};
+      return data;
+    } catch (e) {
+      return {};
+    }
+  }
+
+  async function saveAllNotes(notes) {
+    const content = JSON.stringify(notes);
+    const token = await getToken();
+    const res = await fetch(
+      `${GRAPH_BASE}/me/drive/special/approot:/${ONEDRIVE_FILE}:/content`,
+      {
+        method: 'PUT',
+        headers: {
+          'Authorization': 'Bearer ' + token,
+          'Content-Type': 'application/json'
+        },
+        body: content
+      }
+    );
+    if (!res.ok) throw new Error('Save failed: ' + res.status);
+  }
+
+  // ── Load note for current meeting ──────────────────────────────────────────
+  async function loadNote() {
+    try {
+      const notes = await loadAllNotes();
+      const text = notes[currentMeetingKey] || '';
+      document.getElementById('noteText').value = text;
+      setStatus(text ? 'loaded ✓' : 'new note');
+    } catch (e) {
+      // Fallback to localStorage if Graph fails
+      const local = localStorage.getItem(STORAGE_KEY);
+      const notes = local ? JSON.parse(local) : {};
+      document.getElementById('noteText').value = notes[currentMeetingKey] || '';
+      showError('Offline mode — notes saved locally only');
+      setStatus('offline');
+    }
+    hideLoading();
+  }
+
+  // ── Save note ──────────────────────────────────────────────────────────────
+  async function saveNote() {
+    const text = document.getElementById('noteText').value;
+    setStatus('saving…', 'saving');
+
+    // Always save to localStorage as backup
+    try {
+      const local = localStorage.getItem(STORAGE_KEY);
+      const notes = local ? JSON.parse(local) : {};
+      if (text.trim()) notes[currentMeetingKey] = text;
+      else delete notes[currentMeetingKey];
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    } catch (_) {}
+
+    // Save to OneDrive
+    try {
+      const notes = await loadAllNotes();
+      if (text.trim()) {
+        notes[currentMeetingKey] = text;
+      } else {
+        delete notes[currentMeetingKey];
+      }
+      await saveAllNotes(notes);
+      setStatus('saved ✓', 'saved');
+      setTimeout(() => setStatus('—'), 2500);
+    } catch (e) {
+      setStatus('saved locally', '');
+    }
+  }
+
+  // ── Auto-save on typing ────────────────────────────────────────────────────
+  document.getElementById('noteText').addEventListener('input', () => {
+    setStatus('…', 'saving');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveNote, AUTOSAVE_DELAY);
+  });
+
+  // ── Clear button ───────────────────────────────────────────────────────────
+  document.getElementById('clearBtn').addEventListener('click', async () => {
+    if (!document.getElementById('noteText').value.trim()) return;
+    if (!confirm('Clear this note?')) return;
+    document.getElementById('noteText').value = '';
+    await saveNote();
+  });
+
+  // ── Office.js init ─────────────────────────────────────────────────────────
+  Office.onReady(async (info) => {
+    if (info.host !== Office.HostType.Outlook) {
+      showError('This add-in only works in Outlook.');
+      hideLoading();
+      return;
+    }
+
+    const item = Office.context.mailbox.item;
+    if (!item) {
+      showError('No meeting selected.');
+      hideLoading();
+      return;
+    }
+
+    // Set meeting key
+    currentMeetingKey = getMeetingKey(item);
+
+    // Set title
+    const titleEl = document.getElementById('meetingTitle');
+    const subject = item.subject || 'Untitled meeting';
+    titleEl.textContent = subject;
+    titleEl.title = subject;
+
+    // Series badge
+    if (item.recurrence) {
+      const badge = document.createElement('span');
+      badge.className = 'series-badge';
+      badge.textContent = 'series';
+      titleEl.parentNode.insertBefore(badge, titleEl.nextSibling);
+    }
+
+    // Set date
+    const dateEl = document.getElementById('meetingDate');
+    if (item.start) {
+      if (typeof item.start.getAsync === 'function') {
+        item.start.getAsync((r) => {
+          if (r.status === Office.AsyncResultStatus.Succeeded) {
+            dateEl.textContent = formatDate(r.value);
+          }
+        });
+      } else if (item.start instanceof Date) {
+        dateEl.textContent = formatDate(item.start);
+      }
+    }
+
+    // Load note
+    await loadNote();
+  });
+</script>
+</body>
+</html>
