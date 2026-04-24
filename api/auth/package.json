@@ -1,11 +1,6 @@
 {
   "name": "sticky-notes-backend",
   "version": "1.0.0",
-  "description": "Backend API for Sticky Notes for Outlook",
-  "main": "index.js",
-  "scripts": {
-    "build": "echo 'no build needed'"
-  },
   "dependencies": {
     "@supabase/supabase-js": "2.39.0",
     "jsonwebtoken": "9.0.2"
