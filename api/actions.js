@@ -1,5 +1,5 @@
-import { createClient } from '@supabase/supabase-js';
-import jwt from 'jsonwebtoken';
+const { createClient } = require('@supabase/supabase-js');
+const jwt = require('jsonwebtoken');
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -12,7 +12,7 @@ function verifyToken(req) {
   return jwt.verify(auth.split(' ')[1], process.env.JWT_SECRET);
 }
 
-export default async function handler(req, res) {
+module.exports = async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
@@ -66,4 +66,4 @@ export default async function handler(req, res) {
   }
 
   return res.status(405).json({ error: 'Method not allowed' });
-}
+};
