@@ -2,7 +2,7 @@
   "version": 2,
   "installCommand": "npm install",
   "buildCommand": "npm install",
-  "outputDirectory": ".",
+  "outputDirectory": "public",
   "functions": {
     "api/**/*.js": {
       "memory": 128,
@@ -11,7 +11,7 @@
   },
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/(.*)",
       "headers": [
         { "key": "Access-Control-Allow-Origin", "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PATCH,DELETE,OPTIONS" },
