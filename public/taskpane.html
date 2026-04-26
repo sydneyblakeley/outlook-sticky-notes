@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Sticky Notes</title>
+  <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0ede6;height:100vh;display:flex;flex-direction:column;font-size:13px}
+    .tabs{display:flex;background:#f3f3f3;border-bottom:1px solid #ddd;flex-shrink:0}
+    .tab{flex:1;padding:9px 4px;font-size:11px;text-align:center;cursor:pointer;color:#666;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+    .tab.act{color:#1e4d78;font-weight:600;border-bottom-color:#1e4d78;background:white}
+    .more-tab{padding:9px 10px;font-size:11px;cursor:pointer;color:#666;border-left:1px solid #ddd;flex-shrink:0}
+    .pane{flex:1;overflow-y:auto;display:none;flex-direction:column}
+    .pane.act{display:flex}
+    .note-wrap{padding:10px 12px;flex:1;display:flex;flex-direction:column}
+    .tape{width:38px;height:11px;border-radius:2px;margin:0 auto 5px;background:rgba(180,200,255,.5);border:0.5px solid rgba(160,180,240,.4)}
+    .note-inner{border-radius:2px 2px 8px 2px;padding:9px 9px 7px;flex:1;display:flex;flex-direction:column;background:#FFF9C4}
+    .note-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+    .note-title{font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:500;color:#7a6800}
+    .note-date{font-size:10px;opacity:.7;color:#7a6800}
+    .note-div{height:1px;margin-bottom:5px;opacity:.4;background:#f0dc00}
+    .rte{display:flex;gap:2px;padding:3px 0 5px;flex-wrap:wrap;align-items:center}
+    .tb{font-size:11px;padding:2px 5px;border-radius:3px;border:0.5px solid transparent;cursor:pointer;background:transparent;line-height:1;color:#3a3000}
+    .tb:hover{background:rgba(0,0,0,.08)}
+    .tbsep{width:0.5px;height:13px;background:rgba(0,0,0,.15);margin:0 2px;align-self:center}
+    .editor{flex:1;min-height:100px;outline:none;font-size:13px;line-height:1.8;padding:2px 0;word-break:break-word;color:#3a3000}
+    .editor:empty:before{content:attr(data-placeholder);opacity:.3;font-style:italic;pointer-events:none}
+    .editor ul,.editor ol{padding-left:16px}
+    .note-foot{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
+    .save-status{font-size:10px;opacity:.6;font-style:italic;color:#7a6800}
+    .save-status.saved{opacity:1;color:green}
+    .clr-btn{font-size:10px;background:none;border-radius:3px;padding:2px 6px;cursor:pointer;opacity:.6;border:0.5px solid #f0dc00;color:#7a6800}
+    .color-row{display:flex;align-items:center;gap:6px;padding:6px 12px;border-top:1px solid rgba(0,0,0,.08);flex-shrink:0;background:white}
+    .color-lbl{font-size:11px;color:#666}
+    .csw{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0}
+    .csw:hover{transform:scale(1.2)}
+    .csw.sel{border-color:#333;transform:scale(1.2)}
+    .actions-wrap{padding:10px 12px}
+    .action-item{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:0.5px solid #eee}
+    .action-item:last-child{border-bottom:none}
+    .achk{width:14px;height:14px;margin-top:1px;cursor:pointer;flex-shrink:0;accent-color:#1e4d78}
+    .atw{flex:1;min-width:0}
+    .atxt{font-size:12px;color:#333;line-height:1.4}
+    .atxt.dn{text-decoration:line-through;color:#999}
+    .adel{font-size:10px;color:#bbb;cursor:pointer;padding:0 2px;flex-shrink:0}
+    .adel:hover{color:#e53935}
+    .add-row{display:flex;gap:6px;margin-top:8px}
+    .add-row input{flex:1;font-size:12px;padding:5px 7px;border:0.5px solid #ddd;border-radius:5px;background:white;color:#333}
+    .add-row input:focus{outline:none;border-color:#1e4d78}
+    .add-row button{font-size:11px;padding:5px 10px;border-radius:5px;border:0.5px solid #ddd;cursor:pointer;background:#f5f5f5;color:#333}
+    .send-wrap{padding:10px 12px}
+    .send-note{font-size:12px;color:#666;line-height:1.6;background:#f9f9f9;border-radius:6px;padding:10px;border:0.5px solid #ddd}
+    .more-panel{display:none;border-top:1px solid #ddd;background:white;flex-shrink:0;max-height:300px;overflow-y:auto}
+    .more-panel.vis{display:block}
+    .search-wrap{padding:8px 12px;border-bottom:0.5px solid #eee;background:white;position:sticky;top:0}
+    .search-input{width:100%;font-size:12px;padding:5px 8px;border:0.5px solid #ddd;border-radius:5px;background:white;color:#333}
+    .search-input:focus{outline:none;border-color:#1e4d78}
+    .hist-title{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:#888;padding:8px 12px 3px}
+    .hist-item{padding:8px 12px;border-bottom:0.5px solid #eee;cursor:pointer}
+    .hist-item:hover{background:#f9f9f9}
+    .hist-date{font-size:10px;color:#888}
+    .hist-meeting{font-size:12px;font-weight:500;color:#333;margin-bottom:2px}
+    .hist-preview{font-size:11px;color:#666;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .no-hist{padding:12px;font-size:12px;color:#888;text-align:center}
+    .notif{display:none;background:#1e4d78;color:white;padding:6px 12px;font-size:11px;justify-content:space-between;align-items:center;flex-shrink:0}
+    .notif.vis{display:flex}
+    .notif button{font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.4);background:transparent;color:white;cursor:pointer}
+  </style>
+</head>
+<body>
+
+<div class="notif" id="notif">
+  <span>📌 Starting in 15 min — your note is ready</span>
+  <button onclick="document.getElementById('notif').classList.remove('vis')">dismiss</button>
+</div>
+
+<div class="tabs">
+  <div class="tab act" id="tab-note" onclick="showTab('note')">📝 Note</div>
+  <div class="tab" id="tab-actions" onclick="showTab('actions')">✅ Actions <span id="ac-count" style="display:none;font-size:9px;background:#1e4d78;color:white;border-radius:10px;padding:1px 4px;margin-left:2px"></span></div>
+  <div class="tab" id="tab-send" onclick="showTab('send')">📧 Send</div>
+  <div class="more-tab" id="moreTab" onclick="toggleMore()">⋯</div>
+</div>
+
+<!-- NOTE PANE -->
+<div class="pane act" id="pane-note">
+  <div class="note-wrap">
+    <div class="tape"></div>
+    <div class="note-inner" id="noteInner">
+      <div class="note-hdr">
+        <span class="note-title" id="noteTitle">Loading…</span>
+        <span class="note-date" id="noteDate"></span>
+      </div>
+      <div class="note-div"></div>
+      <div class="rte">
+        <button class="tb" onmousedown="fmt(event,'bold')"><b>B</b></button>
+        <button class="tb" onmousedown="fmt(event,'italic')"><i>I</i></button>
+        <button class="tb" onmousedown="fmt(event,'underline')"><u>U</u></button>
+        <div class="tbsep"></div>
+        <button class="tb" onmousedown="fmt(event,'insertUnorderedList')">•—</button>
+        <button class="tb" onmousedown="fmt(event,'insertOrderedList')">1—</button>
+        <div class="tbsep"></div>
+        <button class="tb" onmousedown="fmtHL(event)" style="font-size:10px">▌HL</button>
+      </div>
+      <div class="editor" id="editor" contenteditable="true"
+           data-placeholder="prep notes, questions, agenda…"
+           oninput="onType()"></div>
+      <div class="note-foot">
+        <span class="save-status" id="saveStatus">—</span>
+        <button class="clr-btn" onclick="clearNote()">clear</button>
+      </div>
+    </div>
+  </div>
+  <div class="color-row">
+    <span class="color-lbl">Color:</span>
+    <div class="csw sel" style="background:#FFF176" onclick="setColor('yellow')" id="sw-yellow"></div>
+    <div class="csw" style="background:#B3E5FC" onclick="setColor('blue')" id="sw-blue"></div>
+    <div class="csw" style="background:#C8E6C9" onclick="setColor('green')" id="sw-green"></div>
+    <div class="csw" style="background:#F8BBD0" onclick="setColor('pink')" id="sw-pink"></div>
+    <div class="csw" style="background:#FFE0B2" onclick="setColor('orange')" id="sw-orange"></div>
+    <div class="csw" style="background:#E1BEE7" onclick="setColor('purple')" id="sw-purple"></div>
+    <div class="csw" style="background:#F5F5F5;border:0.5px solid #ccc" onclick="setColor('white')" id="sw-white"></div>
+  </div>
+</div>
+
+<!-- ACTIONS PANE -->
+<div class="pane" id="pane-actions">
+  <div class="actions-wrap">
+    <div id="actionList"></div>
+    <div class="add-row">
+      <input type="text" id="actionInput" placeholder="Add action item…"
+             onkeydown="if(event.key==='Enter')addAction()">
+      <button onclick="addAction()">+ Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- SEND PANE -->
+<div class="pane" id="pane-send">
+  <div class="send-wrap">
+    <div class="send-note">
+      <strong>📧 Send Recap</strong><br><br>
+      Full Fireflies integration coming in the next update — this will pull your complete meeting notes, strip timestamps, and format them in your exact email style ready to send to all attendees.
+    </div>
+  </div>
+</div>
+
+<!-- MORE PANEL -->
+<div class="more-panel" id="morePanel">
+  <div class="search-wrap">
+    <input class="search-input" placeholder="Search past meeting notes…" oninput="doSearch(this.value)">
+  </div>
+  <div id="histSection">
+    <div class="hist-title">Recent notes</div>
+    <div id="histList"></div>
+  </div>
+</div>
+
+<script>
+// ── Storage key ───────────────────────────────────────────────────────────────
+const STORE = 'stickyNotes_v2';
+
+// ── State ─────────────────────────────────────────────────────────────────────
+let meetingKey = null;
+let currentColor = 'yellow';
+let saveTimer = null;
+let moreOpen = false;
+let localActions = [];
+
+// ── Color themes ──────────────────────────────────────────────────────────────
+const CT = {
+  yellow:{bg:'#FFF9C4',div:'#f0dc00',ink:'#3a3000',inkl:'#7a6800'},
+  blue:  {bg:'#E1F5FE',div:'#4fc3f7',ink:'#01245a',inkl:'#0277bd'},
+  green: {bg:'#E8F5E9',div:'#66bb6a',ink:'#1b3a1c',inkl:'#388e3c'},
+  pink:  {bg:'#FCE4EC',div:'#f06292',ink:'#4a0020',inkl:'#c2185b'},
+  orange:{bg:'#FFF3E0',div:'#ffa726',ink:'#4e1f00',inkl:'#e65100'},
+  purple:{bg:'#F3E5F5',div:'#ab47bc',ink:'#2a0030',inkl:'#7b1fa2'},
+  white: {bg:'#FAFAFA',div:'#bdbdbd',ink:'#212121',inkl:'#757575'},
+};
+
+function applyTheme(c) {
+  const t = CT[c] || CT.yellow;
+  document.getElementById('noteInner').style.background = t.bg;
+  document.getElementById('editor').style.color = t.ink;
+  document.getElementById('noteTitle').style.color = t.inkl;
+  document.getElementById('noteDate').style.color = t.inkl;
+  document.getElementById('saveStatus').style.color = t.inkl;
+  document.querySelector('.clr-btn').style.borderColor = t.div;
+  document.querySelector('.clr-btn').style.color = t.inkl;
+  document.querySelectorAll('.csw').forEach(s => s.classList.remove('sel'));
+  const sw = document.getElementById('sw-' + c);
+  if (sw) sw.classList.add('sel');
+}
+
+function setColor(c) {
+  currentColor = c;
+  applyTheme(c);
+  saveLocal();
+}
+
+function fmt(ev, cmd) { ev.preventDefault(); document.execCommand(cmd, false, null); }
+function fmtHL(ev) { ev.preventDefault(); document.execCommand('hiliteColor', false, '#ffff88'); }
+
+// ── Local storage ─────────────────────────────────────────────────────────────
+function getAllNotes() {
+  try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { return {}; }
+}
+
+function saveLocal() {
+  const all = getAllNotes();
+  all[meetingKey] = {
+    html: document.getElementById('editor').innerHTML,
+    color: currentColor,
+    actions: localActions,
+    title: document.getElementById('noteTitle').textContent,
+    date: document.getElementById('noteDate').textContent,
+    updated: new Date().toISOString()
+  };
+  localStorage.setItem(STORE, JSON.stringify(all));
+  document.getElementById('saveStatus').textContent = 'saved ✓';
+  document.getElementById('saveStatus').className = 'save-status saved';
+  setTimeout(() => {
+    document.getElementById('saveStatus').textContent = '—';
+    document.getElementById('saveStatus').className = 'save-status';
+  }, 2000);
+}
+
+function loadLocal() {
+  const all = getAllNotes();
+  const note = all[meetingKey];
+  if (note) {
+    document.getElementById('editor').innerHTML = note.html || '';
+    currentColor = note.color || 'yellow';
+    localActions = note.actions || [];
+    applyTheme(currentColor);
+  } else {
+    applyTheme('yellow');
+    localActions = [];
+  }
+  renderActions();
+}
+
+function onType() {
+  document.getElementById('saveStatus').textContent = '…';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveLocal, 900);
+}
+
+function clearNote() {
+  if (!document.getElementById('editor').innerHTML.trim()) return;
+  if (!confirm('Clear this note?')) return;
+  document.getElementById('editor').innerHTML = '';
+  saveLocal();
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+function renderActions() {
+  const list = document.getElementById('actionList');
+  list.innerHTML = '';
+  localActions.forEach((a, i) => {
+    const row = document.createElement('div');
+    row.className = 'action-item';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.className = 'achk'; chk.checked = a.done;
+    chk.onchange = () => { localActions[i].done = chk.checked; renderActions(); updateAC(); saveLocal(); };
+    const tw = document.createElement('div'); tw.className = 'atw';
+    const txt = document.createElement('div');
+    txt.className = 'atxt' + (a.done ? ' dn' : '');
+    txt.textContent = a.text;
+    tw.appendChild(txt);
+    const del = document.createElement('span');
+    del.className = 'adel'; del.textContent = '✕';
+    del.onclick = () => { localActions.splice(i, 1); renderActions(); updateAC(); saveLocal(); };
+    row.appendChild(chk); row.appendChild(tw); row.appendChild(del);
+    list.appendChild(row);
+  });
+  updateAC();
+}
+
+function updateAC() {
+  const n = localActions.filter(a => !a.done).length;
+  const el = document.getElementById('ac-count');
+  el.style.display = n ? 'inline' : 'none';
+  el.textContent = n;
+}
+
+function addAction() {
+  const inp = document.getElementById('actionInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  localActions.push({ text, done: false, source: 'manual' });
+  renderActions();
+  saveLocal();
+  inp.value = '';
+}
+
+// ── History & Search ──────────────────────────────────────────────────────────
+function loadHistory() {
+  const all = getAllNotes();
+  const items = Object.entries(all)
+    .filter(([k, v]) => v.html && v.html.trim())
+    .sort((a, b) => new Date(b[1].updated) - new Date(a[1].updated))
+    .slice(0, 10);
+  const list = document.getElementById('histList');
+  if (!items.length) {
+    list.innerHTML = '<div class="no-hist">No past notes yet</div>';
+    return;
+  }
+  list.innerHTML = items.map(([k, v]) => `
+    <div class="hist-item" onclick="loadFromHistory('${k}')">
+      <div class="hist-date">${v.date || ''}</div>
+      <div class="hist-meeting">${v.title || 'Untitled meeting'}</div>
+      <div class="hist-preview">${v.html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim().slice(0,120)}</div>
+    </div>
+  `).join('');
+}
+
+function doSearch(q) {
+  const all = getAllNotes();
+  const histSection = document.getElementById('histSection');
+  if (!q.trim()) { loadHistory(); return; }
+  const results = Object.entries(all)
+    .filter(([k, v]) => {
+      const text = (v.title + ' ' + v.html.replace(/<[^>]+>/g,' ')).toLowerCase();
+      return text.includes(q.toLowerCase());
+    })
+    .slice(0, 15);
+  const list = document.getElementById('histList');
+  document.querySelector('.hist-title').textContent = results.length ? `Results for "${q}"` : 'No results';
+  if (!results.length) { list.innerHTML = '<div class="no-hist">No notes found</div>'; return; }
+  list.innerHTML = results.map(([k, v]) => {
+    const plain = v.html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+    const hl = plain.replace(new RegExp(q,'gi'), m => `<mark style="background:#fff176">${m}</mark>`);
+    return `<div class="hist-item"><div class="hist-date">${v.date||''}</div><div class="hist-meeting">${v.title||'Untitled'}</div><div class="hist-preview">${hl.slice(0,150)}</div></div>`;
+  }).join('');
+}
+
+function loadFromHistory(key) {
+  const all = getAllNotes();
+  const note = all[key];
+  if (!note) return;
+  document.getElementById('editor').innerHTML = note.html || '';
+  currentColor = note.color || 'yellow';
+  applyTheme(currentColor);
+  toggleMore();
+  document.getElementById('saveStatus').textContent = 'loaded from history';
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  ['note','actions','send'].forEach(t => {
+    document.getElementById('pane-' + t).classList.toggle('act', t === tab);
+    document.getElementById('tab-' + t).classList.toggle('act', t === tab);
+  });
+}
+
+function toggleMore() {
+  moreOpen = !moreOpen;
+  document.getElementById('morePanel').classList.toggle('vis', moreOpen);
+  document.getElementById('moreTab').textContent = moreOpen ? '✕' : '⋯';
+  if (moreOpen) loadHistory();
+}
+
+// ── Meeting key ───────────────────────────────────────────────────────────────
+function getMeetingKey(item) {
+  try {
+    if (item.itemId) return 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+    const fb = (item.subject||'') + '_' + Date.now();
+    return 'mtg_' + btoa(encodeURIComponent(fb)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+  } catch(e) { return 'mtg_' + Math.random().toString(36).slice(2); }
+}
+
+// ── Office init ───────────────────────────────────────────────────────────────
+Office.onReady((info) => {
+  const item = Office.context.mailbox?.item;
+
+  if (!item) {
+    document.getElementById('noteTitle').textContent = 'No meeting selected';
+    return;
+  }
+
+  meetingKey = getMeetingKey(item);
+  const title = item.subject || 'Untitled meeting';
+  document.getElementById('noteTitle').textContent = title;
+
+  if (item.start) {
+    const setDate = (d) => {
+      const date = new Date(d);
+      const dateStr = date.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+      document.getElementById('noteDate').textContent = dateStr;
+      const minsUntil = (date - Date.now()) / 60000;
+      if (minsUntil > 0 && minsUntil <= 20) {
+        document.getElementById('notif').classList.add('vis');
+      }
+    };
+    if (typeof item.start.getAsync === 'function') {
+      item.start.getAsync(r => { if (r.status === Office.AsyncResultStatus.Succeeded) setDate(r.value); });
+    } else if (item.start instanceof Date) {
+      setDate(item.start);
+    }
+  }
+
+  loadLocal();
+});
+</script>
+</body>
+</html>
