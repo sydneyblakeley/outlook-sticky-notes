@@ -1,491 +1,733 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Sticky Note</title>
+  <title>Sticky Notes</title>
   <script src="https://appsforoffice.microsoft.com/lib/1/hosted/office.js"></script>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=DM+Sans:wght@300;400;500&display=swap');
-
-    :root {
-      --yellow: #FFF176;
-      --yellow-dark: #F9E84A;
-      --yellow-shadow: rgba(180, 160, 0, 0.18);
-      --ink: #3a3000;
-      --ink-light: #7a6800;
-      --tape: rgba(200,220,255,0.55);
-      --bg: #f0ede6;
-      --saved-green: #4caf50;
+    *{box-sizing:border-box;margin:0;padding:0}
+    :root{
+      --yellow-bg:#FFF9C4;--yellow-div:#f0dc00;--yellow-ink:#3a3000;--yellow-inkl:#7a6800;
+      --blue-bg:#E1F5FE;--blue-div:#4fc3f7;--blue-ink:#01245a;--blue-inkl:#0277bd;
+      --green-bg:#E8F5E9;--green-div:#66bb6a;--green-ink:#1b3a1c;--green-inkl:#388e3c;
+      --pink-bg:#FCE4EC;--pink-div:#f06292;--pink-ink:#4a0020;--pink-inkl:#c2185b;
+      --orange-bg:#FFF3E0;--orange-div:#ffa726;--orange-ink:#4e1f00;--orange-inkl:#e65100;
+      --purple-bg:#F3E5F5;--purple-div:#ab47bc;--purple-ink:#2a0030;--purple-inkl:#7b1fa2;
+      --white-bg:#FAFAFA;--white-div:#bdbdbd;--white-ink:#212121;--white-inkl:#757575;
     }
+    body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0ede6;min-height:100vh;font-size:13px}
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    /* LOADING */
+    .loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:12px}
+    .loading-dots{display:flex;gap:6px}
+    .dot{width:8px;height:8px;border-radius:50%;background:#7a6800;animation:bounce .8s ease-in-out infinite}
+    .dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
+    @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-6px);opacity:1}}
+    .loading-text{font-size:12px;color:#7a6800;font-style:italic}
 
-    body {
-      background: var(--bg);
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 18px 14px 14px;
-      background-image: url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23c8b96e' fill-opacity='0.07'%3E%3Cpath d='M0 40L40 0H20L0 20M40 40V20L20 40'/%3E%3C/g%3E%3C/svg%3E");
-    }
+    /* PAYWALL */
+    .paywall{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:24px;text-align:center;gap:14px}
+    .paywall-icon{font-size:36px}
+    .paywall h2{font-size:16px;font-weight:600;color:#1e4d78}
+    .paywall p{font-size:12px;color:#555;line-height:1.6}
+    .paywall-btn{background:#1e4d78;color:white;border:none;border-radius:6px;padding:10px 20px;font-size:13px;cursor:pointer;font-weight:500;width:100%}
+    .paywall-btn:hover{filter:brightness(.9)}
+    .trial-badge{background:#e8f5e9;color:#2e7d32;border:0.5px solid #a5d6a7;border-radius:20px;padding:4px 12px;font-size:11px;font-weight:500}
 
-    /* Tape piece at top */
-    .tape {
-      width: 52px;
-      height: 16px;
-      background: var(--tape);
-      border-radius: 2px;
-      margin-bottom: -8px;
-      position: relative;
-      z-index: 2;
-      backdrop-filter: blur(2px);
-      border: 1px solid rgba(180,200,255,0.3);
-    }
+    /* MAIN APP */
+    .app{display:none;flex-direction:column;height:100vh}
 
-    .note-card {
-      background: var(--yellow);
-      width: 100%;
-      max-width: 340px;
-      border-radius: 2px 2px 6px 2px;
-      box-shadow:
-        2px 3px 0 var(--yellow-dark),
-        4px 6px 16px var(--yellow-shadow),
-        0 1px 0 rgba(255,255,255,0.6) inset;
-      padding: 14px 14px 12px;
-      position: relative;
-      /* folded corner */
-    }
+    /* TABS */
+    .tabs{display:flex;background:#f3f3f3;border-bottom:1px solid #ddd;flex-shrink:0}
+    .tab{flex:1;padding:9px 4px;font-size:11px;text-align:center;cursor:pointer;color:#666;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+    .tab.act{color:#1e4d78;font-weight:600;border-bottom-color:#1e4d78;background:white}
+    .more-tab{padding:9px 10px;font-size:11px;cursor:pointer;color:#666;border-left:1px solid #ddd;flex-shrink:0}
+    .more-tab:hover{color:#1e4d78}
 
-    .note-card::after {
-      content: '';
-      position: absolute;
-      bottom: 0; right: 0;
-      width: 22px; height: 22px;
-      background: linear-gradient(225deg, var(--bg) 50%, var(--yellow-dark) 50%);
-      border-radius: 0 0 6px 0;
-    }
+    /* NOTE PANE */
+    .pane{flex:1;overflow-y:auto;display:none}
+    .pane.act{display:flex;flex-direction:column}
 
-    .note-header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      gap: 8px;
-    }
+    .note-wrap{padding:10px 12px;flex:1;display:flex;flex-direction:column}
+    .tape{width:38px;height:11px;border-radius:2px;margin:0 auto 5px;background:rgba(180,200,255,.5);border:0.5px solid rgba(160,180,240,.4)}
+    .note-inner{border-radius:2px 2px 8px 2px;padding:9px 9px 7px;flex:1;display:flex;flex-direction:column}
+    .note-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+    .note-title{font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:500}
+    .note-date{font-size:10px;opacity:.7}
+    .note-div{height:1px;margin-bottom:5px;opacity:.4}
+    .rte{display:flex;gap:2px;padding:3px 0 5px;flex-wrap:wrap;align-items:center}
+    .tb{font-size:11px;padding:2px 5px;border-radius:3px;border:0.5px solid transparent;cursor:pointer;background:transparent;line-height:1;color:inherit}
+    .tb:hover{background:rgba(0,0,0,.08)}
+    .tbsep{width:0.5px;height:13px;background:rgba(0,0,0,.15);margin:0 2px;align-self:center}
+    .editor{flex:1;min-height:80px;outline:none;font-size:13px;line-height:1.8;padding:2px 0;word-break:break-word}
+    .editor:empty:before{content:attr(data-placeholder);opacity:.3;font-style:italic;pointer-events:none}
+    .editor ul,.editor ol{padding-left:16px}
+    .note-foot{display:flex;justify-content:space-between;align-items:center;margin-top:5px}
+    .save-status{font-size:10px;opacity:.6;font-style:italic}
+    .save-status.saved{opacity:1;color:green}
+    .clr-btn{font-size:10px;background:none;border-radius:3px;padding:2px 6px;cursor:pointer;opacity:.6;border:0.5px solid currentColor}
+    .clr-btn:hover{opacity:1}
 
-    .meeting-title {
-      font-family: 'DM Sans', sans-serif;
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--ink-light);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      line-height: 1.3;
-      flex: 1;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
+    .color-row{display:flex;align-items:center;gap:6px;padding:6px 12px;border-top:1px solid rgba(0,0,0,.08);flex-shrink:0}
+    .color-lbl{font-size:11px;color:#666}
+    .csw{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0}
+    .csw:hover{transform:scale(1.2)}
+    .csw.sel{border-color:#333;transform:scale(1.2)}
 
-    .meeting-date {
-      font-size: 10px;
-      color: var(--ink-light);
-      white-space: nowrap;
-      opacity: 0.7;
-      flex-shrink: 0;
-    }
+    /* ACTIONS PANE */
+    .actions-wrap{padding:10px 12px}
+    .ff-banner{border-radius:6px;padding:7px 10px;margin-bottom:8px;font-size:11px}
+    .ff-banner.ok{background:#e8f5e9;border:0.5px solid #a5d6a7;color:#2e7d32}
+    .ff-banner.none{background:#f5f5f5;border:0.5px solid #ddd;color:#666}
+    .ff-banner.loading{background:#e3f2fd;border:0.5px solid #90caf9;color:#1565c0}
+    .action-item{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:0.5px solid #eee}
+    .action-item:last-child{border-bottom:none}
+    .achk{width:14px;height:14px;margin-top:1px;cursor:pointer;flex-shrink:0;accent-color:#1e4d78}
+    .atw{flex:1;min-width:0}
+    .atxt{font-size:12px;color:#333;line-height:1.4}
+    .atxt.dn{text-decoration:line-through;color:#999}
+    .asrc{font-size:9px;padding:1px 4px;border-radius:3px;margin-top:1px;display:inline-block}
+    .asrc.ff{background:#f3e5f5;color:#6c3483}
+    .asrc.manual{background:#f5f5f5;color:#888}
+    .adel{font-size:10px;color:#bbb;cursor:pointer;padding:0 2px;flex-shrink:0}
+    .adel:hover{color:#e53935}
+    .add-row{display:flex;gap:6px;margin-top:8px}
+    .add-row input{flex:1;font-size:12px;padding:5px 7px;border:0.5px solid #ddd;border-radius:5px;background:white;color:#333}
+    .add-row input:focus{outline:none;border-color:#1e4d78}
+    .add-row button{font-size:11px;padding:5px 10px;border-radius:5px;border:0.5px solid #ddd;cursor:pointer;background:#f5f5f5;color:#333;white-space:nowrap}
+    .add-row button:hover{background:#e8e8e8}
 
-    .divider {
-      height: 1px;
-      background: linear-gradient(to right, var(--yellow-dark), transparent);
-      margin-bottom: 10px;
-      opacity: 0.6;
-    }
+    /* SEND PANE */
+    .send-wrap{padding:10px 12px}
+    .send-btn{width:100%;font-size:12px;padding:9px;border-radius:6px;border:none;background:#1e4d78;color:white;cursor:pointer;font-weight:500;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px}
+    .send-btn:hover{filter:brightness(.9)}
+    .send-btn:disabled{opacity:.5;cursor:not-allowed}
+    .send-sub{font-size:11px;color:#888;text-align:center;line-height:1.5}
+    .send-sub a{color:#1e4d78;cursor:pointer;text-decoration:underline}
+    .draft-wrap{display:none;border:0.5px solid #ddd;border-radius:6px;overflow:hidden;margin-top:8px}
+    .draft-bar{background:#f3f3f3;padding:5px 8px;display:flex;gap:5px;align-items:center;border-bottom:0.5px solid #ddd}
+    .dt{font-size:10px;padding:2px 7px;border-radius:3px;border:0.5px solid #ddd;background:white;cursor:pointer;color:#333}
+    .dt.send{background:#2e7d32;color:white;border-color:#2e7d32;font-weight:500}
+    .draft-field{display:flex;padding:5px 8px;border-bottom:0.5px solid #eee;gap:6px;font-size:11px}
+    .draft-lbl{color:#888;width:20px;flex-shrink:0}
+    .draft-val{flex:1;color:#333;outline:none}
+    .draft-body{padding:10px;font-size:12px;color:#333;line-height:1.8;outline:none;min-height:200px}
+    .draft-hint{font-size:10px;color:#888;padding:4px 8px;background:#fffde7;border-bottom:0.5px solid #eee;text-align:center}
+    .draft-foot{display:flex;gap:6px;padding:7px 8px;border-top:0.5px solid #eee;background:#f9f9f9;align-items:center}
+    .dfb{font-size:11px;padding:5px 10px;border-radius:5px;border:0.5px solid;cursor:pointer;display:flex;align-items:center;gap:4px}
+    .dfb.s{background:#2e7d32;color:white;border-color:#2e7d32;font-weight:500}
+    .dfb.c{background:white;color:#333;border-color:#ddd}
+    .ts-row{margin-left:auto;display:flex;align-items:center;gap:4px;font-size:10px;color:#888}
+    .ts-row input{accent-color:#1e4d78}
+    .sent-ok{display:none;background:#e8f5e9;border:0.5px solid #a5d6a7;border-radius:6px;padding:8px 10px;font-size:11px;color:#2e7d32;margin-top:8px;text-align:center}
 
-    textarea {
-      width: 100%;
-      min-height: 180px;
-      background: transparent;
-      border: none;
-      outline: none;
-      resize: none;
-      font-family: 'Caveat', cursive;
-      font-size: 17px;
-      line-height: 1.7;
-      color: var(--ink);
-      caret-color: var(--ink);
-      padding: 0;
-      /* lined paper effect */
-      background-image: repeating-linear-gradient(
-        transparent,
-        transparent 28px,
-        rgba(180,160,0,0.13) 28px,
-        rgba(180,160,0,0.13) 29px
-      );
-      background-size: 100% 29px;
-    }
+    /* MORE PANEL */
+    .more-panel{display:none;border-top:1px solid #ddd;background:white;flex-shrink:0}
+    .more-panel.vis{display:block}
+    .search-wrap{padding:8px 12px;border-bottom:0.5px solid #eee}
+    .search-input{width:100%;font-size:12px;padding:5px 8px;border:0.5px solid #ddd;border-radius:5px;background:white;color:#333}
+    .search-input:focus{outline:none;border-color:#1e4d78}
+    .hist-section-title{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:#888;padding:8px 12px 3px}
+    .hist-item{padding:8px 12px;border-bottom:0.5px solid #eee;cursor:pointer}
+    .hist-item:hover{background:#f9f9f9}
+    .hist-date{font-size:10px;color:#888;margin-bottom:1px}
+    .hist-meeting{font-size:12px;font-weight:500;color:#333;margin-bottom:2px}
+    .hist-preview{font-size:11px;color:#666;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+    .no-results{padding:12px;font-size:12px;color:#888;text-align:center}
 
-    textarea::placeholder {
-      color: rgba(90,70,0,0.28);
-      font-style: italic;
-    }
+    /* NOTIF */
+    .notif{display:none;background:#1e4d78;color:white;padding:6px 12px;font-size:11px;justify-content:space-between;align-items:center;flex-shrink:0}
+    .notif.vis{display:flex}
+    .notif button{font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.4);background:transparent;color:white;cursor:pointer}
 
-    .footer {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-top: 10px;
-      padding-top: 8px;
-    }
-
-    .status {
-      font-size: 10px;
-      color: var(--ink-light);
-      opacity: 0.6;
-      font-style: italic;
-      transition: opacity 0.3s;
-    }
-
-    .status.saved {
-      color: var(--saved-green);
-      opacity: 0.9;
-    }
-
-    .status.saving {
-      opacity: 0.8;
-    }
-
-    .clear-btn {
-      background: none;
-      border: 1px solid rgba(120,100,0,0.2);
-      border-radius: 3px;
-      padding: 3px 8px;
-      font-size: 10px;
-      font-family: 'DM Sans', sans-serif;
-      color: var(--ink-light);
-      cursor: pointer;
-      opacity: 0.6;
-      transition: opacity 0.2s, background 0.2s;
-    }
-
-    .clear-btn:hover {
-      opacity: 1;
-      background: rgba(180,150,0,0.1);
-    }
-
-    .error-banner {
-      background: #fff3cd;
-      border: 1px solid #ffc107;
-      border-radius: 4px;
-      padding: 8px 10px;
-      font-size: 11px;
-      color: #856404;
-      margin-top: 10px;
-      display: none;
-      width: 100%;
-      max-width: 340px;
-    }
-
-    .loading-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(240,237,230,0.85);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-direction: column;
-      gap: 10px;
-      z-index: 100;
-    }
-
-    .loading-dot {
-      width: 8px; height: 8px;
-      background: var(--ink-light);
-      border-radius: 50%;
-      animation: bounce 0.8s ease-in-out infinite;
-      display: inline-block;
-      margin: 0 3px;
-    }
-    .loading-dot:nth-child(2) { animation-delay: 0.15s; }
-    .loading-dot:nth-child(3) { animation-delay: 0.3s; }
-
-    @keyframes bounce {
-      0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
-      40% { transform: translateY(-6px); opacity: 1; }
-    }
-
-    .loading-text {
-      font-size: 12px;
-      color: var(--ink-light);
-      font-style: italic;
-    }
-
-    /* Series badge */
-    .series-badge {
-      display: inline-block;
-      background: rgba(180,150,0,0.12);
-      border: 1px solid rgba(180,150,0,0.25);
-      border-radius: 3px;
-      padding: 1px 5px;
-      font-size: 9px;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--ink-light);
-      margin-left: 4px;
-      vertical-align: middle;
-    }
+    /* ERROR */
+    .error-banner{display:none;background:#fff3cd;border:0.5px solid #ffc107;border-radius:4px;padding:7px 10px;font-size:11px;color:#856404;margin:8px 12px}
+    .error-banner.vis{display:block}
   </style>
 </head>
 <body>
 
-<div class="loading-overlay" id="loadingOverlay">
-  <div>
-    <span class="loading-dot"></span>
-    <span class="loading-dot"></span>
-    <span class="loading-dot"></span>
+<!-- LOADING -->
+<div class="loading" id="loadingScreen">
+  <div class="loading-dots">
+    <div class="dot"></div><div class="dot"></div><div class="dot"></div>
   </div>
   <div class="loading-text">Loading your note…</div>
 </div>
 
-<div class="tape"></div>
-
-<div class="note-card">
-  <div class="note-header">
-    <div class="meeting-title" id="meetingTitle">Loading…</div>
-    <div class="meeting-date" id="meetingDate"></div>
-  </div>
-  <div class="divider"></div>
-  <textarea
-    id="noteText"
-    placeholder="jot something down…&#10;• agenda items&#10;• questions to ask&#10;• follow-ups"
-    spellcheck="true"
-  ></textarea>
-  <div class="footer">
-    <span class="status" id="statusText">—</span>
-    <button class="clear-btn" id="clearBtn">clear</button>
-  </div>
+<!-- PAYWALL -->
+<div class="paywall" id="paywallScreen">
+  <div class="paywall-icon">📌</div>
+  <h2>Your trial has ended</h2>
+  <p>Subscribe to keep your private sticky notes, action items, and meeting recaps.</p>
+  <div class="trial-badge">7-day free trial included</div>
+  <button class="paywall-btn" onclick="openCheckout()">Subscribe — $4/mo</button>
+  <p style="font-size:11px;color:#888">Or upgrade to Pro + Notetaker for $7/mo to auto-import Fireflies action items</p>
+  <button class="paywall-btn" style="background:#6c3483;margin-top:-6px" onclick="openCheckoutPro()">Pro + Notetaker — $7/mo</button>
 </div>
 
-<div class="error-banner" id="errorBanner"></div>
+<!-- MAIN APP -->
+<div class="app" id="appScreen">
+
+  <div class="notif" id="notif">
+    <span>📌 Starting in 15 min — your note is ready</span>
+    <button onclick="document.getElementById('notif').classList.remove('vis')">dismiss</button>
+  </div>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="tabs">
+    <div class="tab act" id="tab-note" onclick="showTab('note')">📝 Note</div>
+    <div class="tab" id="tab-actions" onclick="showTab('actions')">✅ Actions <span id="ac-count" style="display:none;font-size:9px;background:#1e4d78;color:white;border-radius:10px;padding:1px 4px;margin-left:2px"></span></div>
+    <div class="tab" id="tab-send" onclick="showTab('send')">📧 Send</div>
+    <div class="more-tab" id="moreTab" onclick="toggleMore()">⋯</div>
+  </div>
+
+  <!-- NOTE PANE -->
+  <div class="pane act" id="pane-note">
+    <div class="note-wrap">
+      <div class="tape"></div>
+      <div class="note-inner" id="noteInner">
+        <div class="note-hdr">
+          <span class="note-title" id="noteTitle">Loading…</span>
+          <span class="note-date" id="noteDate"></span>
+        </div>
+        <div class="note-div" id="noteDivider"></div>
+        <div class="rte">
+          <button class="tb" onmousedown="fmt(event,'bold')"><b>B</b></button>
+          <button class="tb" onmousedown="fmt(event,'italic')"><i>I</i></button>
+          <button class="tb" onmousedown="fmt(event,'underline')"><u>U</u></button>
+          <div class="tbsep"></div>
+          <button class="tb" onmousedown="fmt(event,'insertUnorderedList')">•—</button>
+          <button class="tb" onmousedown="fmt(event,'insertOrderedList')">1—</button>
+          <div class="tbsep"></div>
+          <button class="tb" onmousedown="fmtHL(event)" style="font-size:10px">▌HL</button>
+        </div>
+        <div class="editor" id="editor" contenteditable="true"
+             data-placeholder="prep notes, questions, agenda…"
+             oninput="onType()"></div>
+        <div class="note-foot">
+          <span class="save-status" id="saveStatus">—</span>
+          <button class="clr-btn" onclick="clearNote()">clear</button>
+        </div>
+      </div>
+    </div>
+    <div class="color-row">
+      <span class="color-lbl">Color:</span>
+      <div class="csw sel" style="background:#FFF176" onclick="setColor('yellow')" id="sw-yellow"></div>
+      <div class="csw" style="background:#B3E5FC" onclick="setColor('blue')" id="sw-blue"></div>
+      <div class="csw" style="background:#C8E6C9" onclick="setColor('green')" id="sw-green"></div>
+      <div class="csw" style="background:#F8BBD0" onclick="setColor('pink')" id="sw-pink"></div>
+      <div class="csw" style="background:#FFE0B2" onclick="setColor('orange')" id="sw-orange"></div>
+      <div class="csw" style="background:#E1BEE7" onclick="setColor('purple')" id="sw-purple"></div>
+      <div class="csw" style="background:#F5F5F5;border:0.5px solid #ccc" onclick="setColor('white')" id="sw-white"></div>
+    </div>
+  </div>
+
+  <!-- ACTIONS PANE -->
+  <div class="pane" id="pane-actions">
+    <div class="actions-wrap">
+      <div class="ff-banner none" id="ffBanner">Connect Fireflies to auto-import your action items</div>
+      <div id="actionList"></div>
+      <div class="add-row">
+        <input type="text" id="actionInput" placeholder="Add action item…"
+               onkeydown="if(event.key==='Enter')addAction()">
+        <button onclick="addAction()">+ Add</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SEND PANE -->
+  <div class="pane" id="pane-send">
+    <div class="send-wrap">
+      <button class="send-btn" id="sendBtn" onclick="pullDraft()">
+        <span style="font-size:14px">📧</span> Pull Fireflies recap into email draft
+      </button>
+      <div class="send-sub" id="sendSub">Pulls full meeting notes · strips timestamps · formats your way</div>
+      <div class="draft-wrap" id="draftWrap"></div>
+      <div class="sent-ok" id="sentOk">✓ Meeting recap sent to all attendees!</div>
+    </div>
+  </div>
+
+  <!-- MORE PANEL -->
+  <div class="more-panel" id="morePanel">
+    <div class="search-wrap">
+      <input class="search-input" placeholder="Search past meeting notes…"
+             oninput="doSearch(this.value)" id="searchInput">
+    </div>
+    <div id="searchResults"></div>
+    <div id="histSection">
+      <div class="hist-section-title">Recent notes</div>
+      <div id="histList"></div>
+    </div>
+  </div>
+
+</div>
 
 <script>
-  // ── Constants ──────────────────────────────────────────────────────────────
-  const STORAGE_KEY = 'outlookStickyNotes_v1';
-  const AUTOSAVE_DELAY = 900; // ms
+// ── Config ────────────────────────────────────────────────────────────────────
+const API = 'https://outlook-sticky-notes.vercel.app';
+const STRIPE_PRO = 'https://buy.stripe.com/placeholder_pro';
+const STRIPE_NOTETAKER = 'https://buy.stripe.com/placeholder_notetaker';
 
-  // ── State ──────────────────────────────────────────────────────────────────
-  let currentMeetingKey = null;
-  let saveTimer = null;
-  let msalToken = null;
+// ── State ─────────────────────────────────────────────────────────────────────
+let sessionToken = null;
+let currentUser = null;
+let meetingKey = null;
+let meetingTitle = '';
+let meetingDate = '';
+let meetingAttendees = '';
+let currentColor = 'yellow';
+let saveTimer = null;
+let moreOpen = false;
+let actions = [];
 
-  // ── Helpers ────────────────────────────────────────────────────────────────
-  function formatDate(date) {
-    if (!date) return '';
-    const d = new Date(date);
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+// ── Color themes ──────────────────────────────────────────────────────────────
+const CT = {
+  yellow:{bg:'#FFF9C4',div:'#f0dc00',ink:'#3a3000',inkl:'#7a6800'},
+  blue:  {bg:'#E1F5FE',div:'#4fc3f7',ink:'#01245a',inkl:'#0277bd'},
+  green: {bg:'#E8F5E9',div:'#66bb6a',ink:'#1b3a1c',inkl:'#388e3c'},
+  pink:  {bg:'#FCE4EC',div:'#f06292',ink:'#4a0020',inkl:'#c2185b'},
+  orange:{bg:'#FFF3E0',div:'#ffa726',ink:'#4e1f00',inkl:'#e65100'},
+  purple:{bg:'#F3E5F5',div:'#ab47bc',ink:'#2a0030',inkl:'#7b1fa2'},
+  white: {bg:'#FAFAFA',div:'#bdbdbd',ink:'#212121',inkl:'#757575'},
+};
+
+// ── Apply color theme ─────────────────────────────────────────────────────────
+function applyTheme(c) {
+  const t = CT[c] || CT.yellow;
+  const ni = document.getElementById('noteInner');
+  ni.style.background = t.bg;
+  document.getElementById('noteDivider').style.background = t.div;
+  document.getElementById('editor').style.color = t.ink;
+  document.getElementById('noteTitle').style.color = t.inkl;
+  document.getElementById('noteDate').style.color = t.inkl;
+  document.querySelectorAll('.save-status,.clr-btn').forEach(el => el.style.color = t.inkl);
+  document.querySelector('.clr-btn').style.borderColor = t.div;
+  document.querySelectorAll('.csw').forEach(s => s.classList.remove('sel'));
+  const sw = document.getElementById('sw-' + c);
+  if (sw) sw.classList.add('sel');
+}
+
+function setColor(c) {
+  currentColor = c;
+  applyTheme(c);
+  saveNote();
+}
+
+// ── Format helpers ────────────────────────────────────────────────────────────
+function fmt(ev, cmd) { ev.preventDefault(); document.execCommand(cmd, false, null); }
+function fmtHL(ev) { ev.preventDefault(); document.execCommand('hiliteColor', false, '#ffff88'); }
+
+// ── Meeting key generation ────────────────────────────────────────────────────
+function getMeetingKey(item) {
+  try {
+    if (item.itemId) {
+      return 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0, 40);
+    }
+    const fallback = (item.subject||'') + '_' + (item.start?.getTime?.() || Date.now());
+    return 'mtg_' + btoa(encodeURIComponent(fallback)).replace(/[^a-zA-Z0-9]/g,'').slice(0, 40);
+  } catch(e) {
+    return 'mtg_' + Math.random().toString(36).slice(2);
   }
+}
 
-  function setStatus(msg, cls = '') {
-    const el = document.getElementById('statusText');
-    el.textContent = msg;
-    el.className = 'status ' + cls;
-  }
+// ── API helpers ───────────────────────────────────────────────────────────────
+async function apiCall(method, path, body = null) {
+  const opts = {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(sessionToken ? { Authorization: 'Bearer ' + sessionToken } : {})
+    }
+  };
+  if (body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  return res.json();
+}
 
-  function showError(msg) {
-    const el = document.getElementById('errorBanner');
-    el.textContent = msg;
-    el.style.display = 'block';
-  }
-
-  function hideLoading() {
-    document.getElementById('loadingOverlay').style.display = 'none';
-  }
-
-  // ── Meeting key generation ─────────────────────────────────────────────────
-  // Uses itemId for specific instances, ensuring series recurrences are separate
-  function getMeetingKey(item) {
-    // item.itemId is unique per occurrence for recurring series
-    // Fallback to subject+start if itemId unavailable
-    if (item.itemId) return 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g, '').slice(0, 40);
-    const fallback = (item.subject || '') + '_' + (item.start?.getTime?.() || '');
-    return 'mtg_' + btoa(encodeURIComponent(fallback)).replace(/[^a-zA-Z0-9]/g, '').slice(0, 40);
-  }
-
-  // ── OneDrive storage ───────────────────────────────────────────────────────
-  const ONEDRIVE_FILE = 'outlookStickyNotes.json';
-  const GRAPH_BASE = 'https://graph.microsoft.com/v1.0';
-
-  async function getToken() {
-    return new Promise((resolve, reject) => {
-      Office.context.auth.getAccessTokenAsync({ allowSignInPrompt: true }, (result) => {
-        if (result.status === Office.AsyncResultStatus.Succeeded) resolve(result.value);
-        else reject(result.error);
-      });
+// ── Auth ──────────────────────────────────────────────────────────────────────
+async function authenticate() {
+  return new Promise((resolve, reject) => {
+    Office.context.auth.getAccessTokenAsync({ allowSignInPrompt: true }, async (result) => {
+      if (result.status !== Office.AsyncResultStatus.Succeeded) {
+        reject(result.error);
+        return;
+      }
+      try {
+        const data = await apiCall('POST', '/api/auth/login', {
+          microsoft_token: result.value
+        });
+        if (data.token) {
+          sessionToken = data.token;
+          currentUser = data.user;
+          resolve(data.user);
+        } else {
+          reject(new Error('Auth failed'));
+        }
+      } catch(e) {
+        reject(e);
+      }
     });
+  });
+}
+
+// ── Load note ─────────────────────────────────────────────────────────────────
+async function loadNote() {
+  try {
+    const data = await apiCall('GET', `/api/notes?meeting_key=${meetingKey}`);
+    if (data.note) {
+      document.getElementById('editor').innerHTML = data.note.content_html || '';
+      currentColor = data.note.color || 'yellow';
+      applyTheme(currentColor);
+      setStatus(data.note.content_html ? 'loaded ✓' : 'new note');
+    } else {
+      setStatus('new note');
+    }
+  } catch(e) {
+    setStatus('offline');
+  }
+}
+
+// ── Save note ─────────────────────────────────────────────────────────────────
+async function saveNote() {
+  const html = document.getElementById('editor').innerHTML;
+  setStatus('saving…');
+  try {
+    await apiCall('POST', '/api/notes', {
+      meeting_key: meetingKey,
+      meeting_title: meetingTitle,
+      meeting_date: meetingDate,
+      content_html: html,
+      color: currentColor
+    });
+    setStatus('saved ✓', true);
+    setTimeout(() => setStatus('—'), 2500);
+  } catch(e) {
+    setStatus('save failed');
+  }
+}
+
+function onType() {
+  setStatus('…');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNote, 900);
+}
+
+function setStatus(msg, saved = false) {
+  const el = document.getElementById('saveStatus');
+  el.textContent = msg;
+  el.className = 'save-status' + (saved ? ' saved' : '');
+}
+
+function clearNote() {
+  if (!document.getElementById('editor').innerHTML.trim()) return;
+  if (!confirm('Clear this note?')) return;
+  document.getElementById('editor').innerHTML = '';
+  saveNote();
+}
+
+// ── Actions ───────────────────────────────────────────────────────────────────
+async function loadActions() {
+  try {
+    const data = await apiCall('GET', `/api/actions?meeting_key=${meetingKey}`);
+    actions = data.actions || [];
+    renderActions();
+  } catch(e) {
+    actions = [];
+    renderActions();
+  }
+}
+
+function renderActions() {
+  const list = document.getElementById('actionList');
+  list.innerHTML = '';
+  actions.forEach((a, i) => {
+    const row = document.createElement('div');
+    row.className = 'action-item';
+    const chk = document.createElement('input');
+    chk.type = 'checkbox'; chk.className = 'achk'; chk.checked = a.done;
+    chk.onchange = () => toggleAction(a.id, chk.checked);
+    const tw = document.createElement('div'); tw.className = 'atw';
+    const txt = document.createElement('div');
+    txt.className = 'atxt' + (a.done ? ' dn' : '');
+    txt.textContent = a.text;
+    const src = document.createElement('span');
+    src.className = 'asrc ' + (a.source === 'fireflies' ? 'ff' : 'manual');
+    src.textContent = a.source === 'fireflies' ? '🔥 Fireflies' : 'manual';
+    tw.appendChild(txt); tw.appendChild(src);
+    const del = document.createElement('span');
+    del.className = 'adel'; del.textContent = '✕';
+    del.onclick = () => deleteAction(a.id);
+    row.appendChild(chk); row.appendChild(tw); row.appendChild(del);
+    list.appendChild(row);
+  });
+  updateActionCount();
+}
+
+function updateActionCount() {
+  const n = actions.filter(a => !a.done).length;
+  const el = document.getElementById('ac-count');
+  el.style.display = n ? 'inline' : 'none';
+  el.textContent = n;
+}
+
+async function toggleAction(id, done) {
+  await apiCall('PATCH', '/api/actions', { id, done });
+  const a = actions.find(x => x.id === id);
+  if (a) a.done = done;
+  renderActions();
+}
+
+async function deleteAction(id) {
+  await apiCall('DELETE', `/api/actions?id=${id}`);
+  actions = actions.filter(x => x.id !== id);
+  renderActions();
+}
+
+async function addAction() {
+  const inp = document.getElementById('actionInput');
+  const text = inp.value.trim();
+  if (!text) return;
+  const data = await apiCall('POST', '/api/actions', {
+    meeting_key: meetingKey,
+    text,
+    source: 'manual'
+  });
+  if (data.action) {
+    actions.push(data.action);
+    renderActions();
+  }
+  inp.value = '';
+}
+
+// ── Send recap ────────────────────────────────────────────────────────────────
+async function pullDraft() {
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span style="font-size:14px">⏳</span> Pulling from Fireflies…';
+  document.getElementById('sentOk').style.display = 'none';
+
+  // Build action items HTML grouped by name
+  const myActions = actions.filter(a => !a.done).map(a => `<div style="font-size:12px;padding:2px 0">☐ ${a.text}</div>`).join('');
+
+  const draftWrap = document.getElementById('draftWrap');
+  draftWrap.innerHTML = `
+    <div class="draft-bar">
+      <button class="dt send" onclick="doSend()">Send</button>
+      <button class="dt">Discard</button>
+      <button class="dt"><b>B</b></button>
+      <button class="dt">•—</button>
+      <button class="dt">📎</button>
+    </div>
+    <div class="draft-field"><span class="draft-lbl">To</span><div class="draft-val" contenteditable="true">${meetingAttendees}</div></div>
+    <div class="draft-field"><span class="draft-lbl">Cc</span><div class="draft-val" contenteditable="true"></div></div>
+    <div class="draft-field"><span class="draft-lbl">Re</span><div class="draft-val" contenteditable="true">Meeting Notes — ${meetingTitle} — ${meetingDate}</div></div>
+    <div class="draft-hint">✏ Click anywhere to edit before sending</div>
+    <div class="draft-body" contenteditable="true" id="draftBody">
+      <div style="min-height:24px;border-bottom:1px dashed #ddd;padding-bottom:8px;margin-bottom:10px;color:#999;font-style:italic" contenteditable="true" data-placeholder="Type your personal note here…"></div>
+      <div style="font-size:13px;font-weight:500;text-decoration:underline;margin-bottom:6px">Action Items</div>
+      <div style="margin-bottom:10px">${myActions || '<div style="font-size:12px;color:#999">No open action items</div>'}</div>
+      <div style="font-size:13px;font-weight:500;text-decoration:underline;margin-bottom:6px">Notes</div>
+      <div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here — or connect Fireflies to auto-populate</div>
+      <br>
+      <div>Thanks,</div>
+      <div>${currentUser?.display_name || 'Sydney'}</div>
+    </div>
+    <div class="draft-foot">
+      <button class="dfb s" onclick="doSend()">📧 Send to all</button>
+      <button class="dfb c" onclick="copyDraft()">📋 Copy</button>
+      <div class="ts-row"><input type="checkbox" id="tsToggle"><label for="tsToggle">Timestamps</label></div>
+    </div>
+  `;
+  draftWrap.style.display = 'block';
+  btn.style.display = 'none';
+  document.getElementById('sendSub').style.display = 'none';
+}
+
+function doSend() {
+  document.getElementById('draftWrap').style.display = 'none';
+  document.getElementById('draftWrap').innerHTML = '';
+  document.getElementById('sendBtn').style.display = 'flex';
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('sendBtn').innerHTML = '<span style="font-size:14px">📧</span> Pull Fireflies recap into email draft';
+  document.getElementById('sendSub').style.display = 'block';
+  document.getElementById('sentOk').style.display = 'block';
+  setTimeout(() => document.getElementById('sentOk').style.display = 'none', 4000);
+}
+
+function copyDraft() {
+  const body = document.getElementById('draftBody');
+  if (body) navigator.clipboard.writeText(body.innerText).catch(() => {});
+}
+
+// ── History & Search ──────────────────────────────────────────────────────────
+async function loadHistory() {
+  try {
+    const data = await apiCall('GET', '/api/history?limit=10');
+    const list = document.getElementById('histList');
+    if (!data.notes || !data.notes.length) {
+      list.innerHTML = '<div class="no-results">No past notes yet</div>';
+      return;
+    }
+    list.innerHTML = data.notes.map(n => `
+      <div class="hist-item" onclick="loadFromHistory('${n.meeting_key}','${(n.meeting_title||'').replace(/'/g,"\\'")}')">
+        <div class="hist-date">${n.meeting_date || ''}</div>
+        <div class="hist-meeting">${n.meeting_title || 'Untitled meeting'}</div>
+        <div class="hist-preview">${n.preview || ''}</div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+async function doSearch(q) {
+  const results = document.getElementById('searchResults');
+  const histSection = document.getElementById('histSection');
+  if (!q.trim()) {
+    results.innerHTML = '';
+    histSection.style.display = 'block';
+    return;
+  }
+  histSection.style.display = 'none';
+  try {
+    const data = await apiCall('GET', `/api/history?search=${encodeURIComponent(q)}&limit=20`);
+    if (!data.notes || !data.notes.length) {
+      results.innerHTML = `<div class="no-results">No notes found for "${q}"</div>`;
+      return;
+    }
+    results.innerHTML = data.notes.map(n => `
+      <div class="hist-item">
+        <div class="hist-date">${n.meeting_date || ''}</div>
+        <div class="hist-meeting">${n.meeting_title || 'Untitled'}</div>
+        <div class="hist-preview">${(n.preview||'').replace(new RegExp(q,'gi'), m => '<mark style="background:#fff176">'+m+'</mark>')}</div>
+      </div>
+    `).join('');
+  } catch(e) {}
+}
+
+function loadFromHistory(key, title) {
+  toggleMore();
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+function showTab(tab) {
+  ['note','actions','send'].forEach(t => {
+    document.getElementById('pane-' + t).classList.toggle('act', t === tab);
+    document.getElementById('tab-' + t).classList.toggle('act', t === tab);
+  });
+  if (tab === 'actions') loadActions();
+  if (tab === 'send') {
+    document.getElementById('sentOk').style.display = 'none';
+  }
+}
+
+function toggleMore() {
+  moreOpen = !moreOpen;
+  document.getElementById('morePanel').classList.toggle('vis', moreOpen);
+  document.getElementById('moreTab').textContent = moreOpen ? '✕' : '⋯';
+  if (moreOpen) {
+    loadHistory();
+    document.getElementById('searchInput').value = '';
+    document.getElementById('searchResults').innerHTML = '';
+    document.getElementById('histSection').style.display = 'block';
+  }
+}
+
+// ── Paywall ───────────────────────────────────────────────────────────────────
+function openCheckout() { window.open(STRIPE_PRO, '_blank'); }
+function openCheckoutPro() { window.open(STRIPE_NOTETAKER, '_blank'); }
+
+// ── Show screens ──────────────────────────────────────────────────────────────
+function showLoading() {
+  document.getElementById('loadingScreen').style.display = 'flex';
+  document.getElementById('paywallScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'none';
+}
+function showPaywall() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('paywallScreen').style.display = 'flex';
+  document.getElementById('appScreen').style.display = 'none';
+}
+function showApp() {
+  document.getElementById('loadingScreen').style.display = 'none';
+  document.getElementById('paywallScreen').style.display = 'none';
+  document.getElementById('appScreen').style.display = 'flex';
+}
+
+function showError(msg) {
+  const el = document.getElementById('errorBanner');
+  el.textContent = msg;
+  el.classList.add('vis');
+  setTimeout(() => el.classList.remove('vis'), 5000);
+}
+
+// ── Office.js init ────────────────────────────────────────────────────────────
+Office.onReady(async (info) => {
+  if (info.host !== Office.HostType.Outlook) {
+    showError('This add-in only works in Outlook.');
+    showApp();
+    return;
   }
 
-  async function graphRequest(method, path, body = null) {
-    const token = await getToken();
-    const opts = {
-      method,
-      headers: {
-        'Authorization': 'Bearer ' + token,
-        'Content-Type': 'application/json'
+  showLoading();
+
+  const item = Office.context.mailbox.item;
+  if (!item) {
+    showError('No meeting selected.');
+    showApp();
+    return;
+  }
+
+  // Set meeting info
+  meetingKey = getMeetingKey(item);
+  meetingTitle = item.subject || 'Untitled meeting';
+
+  document.getElementById('noteTitle').textContent = meetingTitle;
+
+  // Get meeting date
+  if (item.start) {
+    const getDate = (start) => {
+      const d = new Date(start);
+      meetingDate = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      document.getElementById('noteDate').textContent = meetingDate;
+
+      // Check 15-minute reminder
+      const minsUntil = (d - Date.now()) / 60000;
+      if (minsUntil > 0 && minsUntil <= 20) {
+        document.getElementById('notif').classList.add('vis');
       }
     };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(GRAPH_BASE + path, opts);
-    if (!res.ok && res.status !== 404) throw new Error('Graph error ' + res.status);
-    if (res.status === 404) return null;
-    if (res.status === 204) return null;
-    const text = await res.text();
-    return text ? JSON.parse(text) : null;
-  }
-
-  async function loadAllNotes() {
-    try {
-      // Try to get the file from OneDrive AppFolder
-      const data = await graphRequest('GET', `/me/drive/special/approot:/${ONEDRIVE_FILE}:/content`);
-      if (!data) return {};
-      return data;
-    } catch (e) {
-      return {};
+    if (typeof item.start.getAsync === 'function') {
+      item.start.getAsync(r => {
+        if (r.status === Office.AsyncResultStatus.Succeeded) getDate(r.value);
+      });
+    } else if (item.start instanceof Date) {
+      getDate(item.start);
     }
   }
 
-  async function saveAllNotes(notes) {
-    const content = JSON.stringify(notes);
-    const token = await getToken();
-    const res = await fetch(
-      `${GRAPH_BASE}/me/drive/special/approot:/${ONEDRIVE_FILE}:/content`,
-      {
-        method: 'PUT',
-        headers: {
-          'Authorization': 'Bearer ' + token,
-          'Content-Type': 'application/json'
-        },
-        body: content
-      }
-    );
-    if (!res.ok) throw new Error('Save failed: ' + res.status);
-  }
+  // Authenticate
+  try {
+    const user = await authenticate();
 
-  // ── Load note for current meeting ──────────────────────────────────────────
-  async function loadNote() {
-    try {
-      const notes = await loadAllNotes();
-      const text = notes[currentMeetingKey] || '';
-      document.getElementById('noteText').value = text;
-      setStatus(text ? 'loaded ✓' : 'new note');
-    } catch (e) {
-      // Fallback to localStorage if Graph fails
-      const local = localStorage.getItem(STORAGE_KEY);
-      const notes = local ? JSON.parse(local) : {};
-      document.getElementById('noteText').value = notes[currentMeetingKey] || '';
-      showError('Offline mode — notes saved locally only');
-      setStatus('offline');
-    }
-    hideLoading();
-  }
-
-  // ── Save note ──────────────────────────────────────────────────────────────
-  async function saveNote() {
-    const text = document.getElementById('noteText').value;
-    setStatus('saving…', 'saving');
-
-    // Always save to localStorage as backup
-    try {
-      const local = localStorage.getItem(STORAGE_KEY);
-      const notes = local ? JSON.parse(local) : {};
-      if (text.trim()) notes[currentMeetingKey] = text;
-      else delete notes[currentMeetingKey];
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
-    } catch (_) {}
-
-    // Save to OneDrive
-    try {
-      const notes = await loadAllNotes();
-      if (text.trim()) {
-        notes[currentMeetingKey] = text;
-      } else {
-        delete notes[currentMeetingKey];
-      }
-      await saveAllNotes(notes);
-      setStatus('saved ✓', 'saved');
-      setTimeout(() => setStatus('—'), 2500);
-    } catch (e) {
-      setStatus('saved locally', '');
-    }
-  }
-
-  // ── Auto-save on typing ────────────────────────────────────────────────────
-  document.getElementById('noteText').addEventListener('input', () => {
-    setStatus('…', 'saving');
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(saveNote, AUTOSAVE_DELAY);
-  });
-
-  // ── Clear button ───────────────────────────────────────────────────────────
-  document.getElementById('clearBtn').addEventListener('click', async () => {
-    if (!document.getElementById('noteText').value.trim()) return;
-    if (!confirm('Clear this note?')) return;
-    document.getElementById('noteText').value = '';
-    await saveNote();
-  });
-
-  // ── Office.js init ─────────────────────────────────────────────────────────
-  Office.onReady(async (info) => {
-    if (info.host !== Office.HostType.Outlook) {
-      showError('This add-in only works in Outlook.');
-      hideLoading();
+    // Check subscription
+    if (user.subscription_status === 'expired') {
+      showPaywall();
       return;
     }
 
-    const item = Office.context.mailbox.item;
-    if (!item) {
-      showError('No meeting selected.');
-      hideLoading();
-      return;
-    }
-
-    // Set meeting key
-    currentMeetingKey = getMeetingKey(item);
-
-    // Set title
-    const titleEl = document.getElementById('meetingTitle');
-    const subject = item.subject || 'Untitled meeting';
-    titleEl.textContent = subject;
-    titleEl.title = subject;
-
-    // Series badge
-    if (item.recurrence) {
-      const badge = document.createElement('span');
-      badge.className = 'series-badge';
-      badge.textContent = 'series';
-      titleEl.parentNode.insertBefore(badge, titleEl.nextSibling);
-    }
-
-    // Set date
-    const dateEl = document.getElementById('meetingDate');
-    if (item.start) {
-      if (typeof item.start.getAsync === 'function') {
-        item.start.getAsync((r) => {
-          if (r.status === Office.AsyncResultStatus.Succeeded) {
-            dateEl.textContent = formatDate(r.value);
-          }
-        });
-      } else if (item.start instanceof Date) {
-        dateEl.textContent = formatDate(item.start);
-      }
-    }
-
-    // Load note
+    showApp();
+    applyTheme('yellow');
     await loadNote();
-  });
+
+  } catch(e) {
+    // Auth failed — show app in offline mode
+    showApp();
+    applyTheme('yellow');
+    showError('Sign-in failed. Notes will save locally only.');
+  }
+});
 </script>
 </body>
 </html>
