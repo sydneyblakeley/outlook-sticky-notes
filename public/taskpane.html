@@ -38,12 +38,19 @@
     .csw:hover{transform:scale(1.2)}
     .csw.sel{border-color:#333;transform:scale(1.2)}
     .actions-wrap{padding:10px 12px}
+    .ff-banner{border-radius:6px;padding:7px 10px;margin-bottom:8px;font-size:11px;font-weight:500}
+    .ff-banner.ok{background:#e8f5e9;border:0.5px solid #a5d6a7;color:#2e7d32}
+    .ff-banner.loading{background:#e3f2fd;border:0.5px solid #90caf9;color:#1565c0}
+    .ff-banner.none{background:#f5f5f5;border:0.5px solid #ddd;color:#666;font-weight:400}
     .action-item{display:flex;align-items:flex-start;gap:7px;padding:5px 0;border-bottom:0.5px solid #eee}
     .action-item:last-child{border-bottom:none}
     .achk{width:14px;height:14px;margin-top:1px;cursor:pointer;flex-shrink:0;accent-color:#1e4d78}
     .atw{flex:1;min-width:0}
     .atxt{font-size:12px;color:#333;line-height:1.4}
     .atxt.dn{text-decoration:line-through;color:#999}
+    .asrc{font-size:9px;padding:1px 4px;border-radius:3px;margin-top:1px;display:inline-block}
+    .asrc.ff{background:#f3e5f5;color:#6c3483}
+    .asrc.manual{background:#f5f5f5;color:#888}
     .adel{font-size:10px;color:#bbb;cursor:pointer;padding:0 2px;flex-shrink:0}
     .adel:hover{color:#e53935}
     .add-row{display:flex;gap:6px;margin-top:8px}
@@ -51,8 +58,24 @@
     .add-row input:focus{outline:none;border-color:#1e4d78}
     .add-row button{font-size:11px;padding:5px 10px;border-radius:5px;border:0.5px solid #ddd;cursor:pointer;background:#f5f5f5;color:#333}
     .send-wrap{padding:10px 12px}
-    .send-note{font-size:12px;color:#666;line-height:1.6;background:#f9f9f9;border-radius:6px;padding:10px;border:0.5px solid #ddd}
-    .more-panel{display:none;border-top:1px solid #ddd;background:white;flex-shrink:0;max-height:300px;overflow-y:auto}
+    .send-btn{width:100%;font-size:12px;padding:9px;border-radius:6px;border:none;background:#1e4d78;color:white;cursor:pointer;font-weight:500;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px}
+    .send-btn:hover{filter:brightness(.9)}
+    .send-btn:disabled{opacity:.5;cursor:not-allowed}
+    .draft-wrap{display:none;border:0.5px solid #ddd;border-radius:6px;overflow:hidden;margin-top:8px}
+    .draft-bar{background:#f3f3f3;padding:5px 8px;display:flex;gap:5px;align-items:center;border-bottom:0.5px solid #ddd}
+    .dt{font-size:10px;padding:2px 7px;border-radius:3px;border:0.5px solid #ddd;background:white;cursor:pointer;color:#333}
+    .dt.send{background:#2e7d32;color:white;border-color:#2e7d32;font-weight:500}
+    .draft-field{display:flex;padding:5px 8px;border-bottom:0.5px solid #eee;gap:6px;font-size:11px}
+    .draft-lbl{color:#888;width:20px;flex-shrink:0}
+    .draft-val{flex:1;color:#333;outline:none}
+    .draft-hint{font-size:10px;color:#888;padding:4px 8px;background:#fffde7;border-bottom:0.5px solid #eee;text-align:center}
+    .draft-body{padding:10px;font-size:12px;color:#333;line-height:1.8;outline:none;min-height:200px}
+    .draft-foot{display:flex;gap:6px;padding:7px 8px;border-top:0.5px solid #eee;background:#f9f9f9;align-items:center}
+    .dfb{font-size:11px;padding:5px 10px;border-radius:5px;border:0.5px solid;cursor:pointer;display:flex;align-items:center;gap:4px}
+    .dfb.s{background:#2e7d32;color:white;border-color:#2e7d32;font-weight:500}
+    .dfb.c{background:white;color:#333;border-color:#ddd}
+    .sent-ok{display:none;background:#e8f5e9;border:0.5px solid #a5d6a7;border-radius:6px;padding:8px 10px;font-size:11px;color:#2e7d32;margin-top:8px;text-align:center}
+    .more-panel{display:none;border-top:1px solid #ddd;background:white;flex-shrink:0;max-height:280px;overflow-y:auto}
     .more-panel.vis{display:block}
     .search-wrap{padding:8px 12px;border-bottom:0.5px solid #eee;background:white;position:sticky;top:0}
     .search-input{width:100%;font-size:12px;padding:5px 8px;border:0.5px solid #ddd;border-radius:5px;background:white;color:#333}
@@ -63,10 +86,16 @@
     .hist-date{font-size:10px;color:#888}
     .hist-meeting{font-size:12px;font-weight:500;color:#333;margin-bottom:2px}
     .hist-preview{font-size:11px;color:#666;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-    .no-hist{padding:12px;font-size:12px;color:#888;text-align:center}
     .notif{display:none;background:#1e4d78;color:white;padding:6px 12px;font-size:11px;justify-content:space-between;align-items:center;flex-shrink:0}
     .notif.vis{display:flex}
     .notif button{font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.4);background:transparent;color:white;cursor:pointer}
+    .eslbl{font-size:13px;font-weight:500;text-decoration:underline;margin:10px 0 5px;color:#333}
+    .ename{font-size:12px;font-weight:500;color:#1e4d78;margin:6px 0 2px}
+    .ebul{padding-left:16px;margin:2px 0}
+    .ebul li{font-size:12px;color:#333;margin:2px 0;line-height:1.5}
+    .enhead{font-weight:500;font-size:12px;color:#333;margin:6px 0 2px}
+    .pnote{min-height:28px;border-bottom:1px dashed #ddd;padding-bottom:6px;margin-bottom:8px;font-size:12px;color:#999;font-style:italic;outline:none}
+    .pnote:focus{color:#333}
   </style>
 </head>
 <body>
@@ -127,6 +156,7 @@
 <!-- ACTIONS PANE -->
 <div class="pane" id="pane-actions">
   <div class="actions-wrap">
+    <div class="ff-banner loading" id="ffBanner">⏳ Checking Fireflies for your action items…</div>
     <div id="actionList"></div>
     <div class="add-row">
       <input type="text" id="actionInput" placeholder="Add action item…"
@@ -139,10 +169,11 @@
 <!-- SEND PANE -->
 <div class="pane" id="pane-send">
   <div class="send-wrap">
-    <div class="send-note">
-      <strong>📧 Send Recap</strong><br><br>
-      Full Fireflies integration coming in the next update — this will pull your complete meeting notes, strip timestamps, and format them in your exact email style ready to send to all attendees.
-    </div>
+    <button class="send-btn" id="sendBtn" onclick="pullDraft()">
+      <span style="font-size:14px">📧</span> Pull Fireflies recap into email draft
+    </button>
+    <div class="draft-wrap" id="draftWrap"></div>
+    <div class="sent-ok" id="sentOk">✓ Meeting recap ready — open in Outlook Mail to send!</div>
   </div>
 </div>
 
@@ -158,17 +189,18 @@
 </div>
 
 <script>
-// ── Storage key ───────────────────────────────────────────────────────────────
 const STORE = 'stickyNotes_v2';
+const API = 'https://outlook-sticky-notes.vercel.app';
 
-// ── State ─────────────────────────────────────────────────────────────────────
 let meetingKey = null;
+let meetingTitle = '';
+let meetingDate = '';
 let currentColor = 'yellow';
 let saveTimer = null;
 let moreOpen = false;
 let localActions = [];
+let ffData = null;
 
-// ── Color themes ──────────────────────────────────────────────────────────────
 const CT = {
   yellow:{bg:'#FFF9C4',div:'#f0dc00',ink:'#3a3000',inkl:'#7a6800'},
   blue:  {bg:'#E1F5FE',div:'#4fc3f7',ink:'#01245a',inkl:'#0277bd'},
@@ -193,12 +225,7 @@ function applyTheme(c) {
   if (sw) sw.classList.add('sel');
 }
 
-function setColor(c) {
-  currentColor = c;
-  applyTheme(c);
-  saveLocal();
-}
-
+function setColor(c) { currentColor = c; applyTheme(c); saveLocal(); }
 function fmt(ev, cmd) { ev.preventDefault(); document.execCommand(cmd, false, null); }
 function fmtHL(ev) { ev.preventDefault(); document.execCommand('hiliteColor', false, '#ffff88'); }
 
@@ -213,8 +240,8 @@ function saveLocal() {
     html: document.getElementById('editor').innerHTML,
     color: currentColor,
     actions: localActions,
-    title: document.getElementById('noteTitle').textContent,
-    date: document.getElementById('noteDate').textContent,
+    title: meetingTitle,
+    date: meetingDate,
     updated: new Date().toISOString()
   };
   localStorage.setItem(STORE, JSON.stringify(all));
@@ -233,11 +260,11 @@ function loadLocal() {
     document.getElementById('editor').innerHTML = note.html || '';
     currentColor = note.color || 'yellow';
     localActions = note.actions || [];
-    applyTheme(currentColor);
   } else {
     applyTheme('yellow');
     localActions = [];
   }
+  applyTheme(currentColor);
   renderActions();
 }
 
@@ -254,6 +281,44 @@ function clearNote() {
   saveLocal();
 }
 
+// ── Fireflies integration ─────────────────────────────────────────────────────
+async function loadFireflies() {
+  const banner = document.getElementById('ffBanner');
+  try {
+    const params = new URLSearchParams({
+      meeting_title: meetingTitle,
+      meeting_date: meetingDate
+    });
+    const res = await fetch(`${API}/api/fireflies?${params}`);
+    const data = await res.json();
+
+    if (data.found && data.my_actions && data.my_actions.length > 0) {
+      ffData = data;
+      // Add Fireflies actions that aren't already in local list
+      const existingFF = localActions.filter(a => a.source === 'fireflies');
+      if (existingFF.length === 0) {
+        data.my_actions.forEach(text => {
+          localActions.push({ text, done: false, source: 'fireflies' });
+        });
+        saveLocal();
+      }
+      banner.className = 'ff-banner ok';
+      banner.textContent = `🔥 ${data.my_actions.length} action item${data.my_actions.length > 1 ? 's' : ''} imported from Fireflies`;
+      renderActions();
+    } else if (data.found) {
+      ffData = data;
+      banner.className = 'ff-banner none';
+      banner.textContent = '🔥 Meeting found in Fireflies — no action items assigned to you';
+    } else {
+      banner.className = 'ff-banner none';
+      banner.textContent = 'Add action items manually or connect Fireflies to auto-import';
+    }
+  } catch(e) {
+    banner.className = 'ff-banner none';
+    banner.textContent = 'Add action items manually';
+  }
+}
+
 // ── Actions ───────────────────────────────────────────────────────────────────
 function renderActions() {
   const list = document.getElementById('actionList');
@@ -268,7 +333,10 @@ function renderActions() {
     const txt = document.createElement('div');
     txt.className = 'atxt' + (a.done ? ' dn' : '');
     txt.textContent = a.text;
-    tw.appendChild(txt);
+    const src = document.createElement('span');
+    src.className = 'asrc ' + (a.source === 'fireflies' ? 'ff' : 'manual');
+    src.textContent = a.source === 'fireflies' ? '🔥 Fireflies' : 'manual';
+    tw.appendChild(txt); tw.appendChild(src);
     const del = document.createElement('span');
     del.className = 'adel'; del.textContent = '✕';
     del.onclick = () => { localActions.splice(i, 1); renderActions(); updateAC(); saveLocal(); };
@@ -295,7 +363,87 @@ function addAction() {
   inp.value = '';
 }
 
-// ── History & Search ──────────────────────────────────────────────────────────
+// ── Send recap ────────────────────────────────────────────────────────────────
+async function pullDraft() {
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span>⏳</span> Building draft…';
+  document.getElementById('sentOk').style.display = 'none';
+
+  // Build action items HTML grouped by person
+  let aiHTML = '';
+  if (ffData && ffData.all_actions) {
+    Object.entries(ffData.all_actions).forEach(([name, items]) => {
+      if (!items.length) return;
+      aiHTML += `<div class="ename">@${name}</div><ul class="ebul">${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
+    });
+  } else {
+    const myOpen = localActions.filter(a => !a.done);
+    if (myOpen.length) {
+      aiHTML = `<div class="ename">@Sydney Zindroski</div><ul class="ebul">${myOpen.map(a => `<li>${a.text}</li>`).join('')}</ul>`;
+    } else {
+      aiHTML = '<div style="font-size:12px;color:#999">No open action items</div>';
+    }
+  }
+
+  // Build notes HTML
+  let notesHTML = '';
+  if (ffData && ffData.summary) {
+    notesHTML = `<div class="enhead">Meeting Summary</div><div style="font-size:12px;line-height:1.7;color:#333;margin-bottom:8px">${ffData.summary}</div>`;
+  } else {
+    notesHTML = '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
+  }
+
+  const attendees = ffData?.attendees || '';
+
+  document.getElementById('draftWrap').innerHTML = `
+    <div class="draft-bar">
+      <button class="dt send" onclick="doSend()">Send</button>
+      <button class="dt">Discard</button>
+      <button class="dt"><b>B</b></button>
+      <button class="dt">•—</button>
+      <button class="dt">📎</button>
+    </div>
+    <div class="draft-field"><span class="draft-lbl">To</span><div class="draft-val" contenteditable="true">${attendees}</div></div>
+    <div class="draft-field"><span class="draft-lbl">Cc</span><div class="draft-val" contenteditable="true"></div></div>
+    <div class="draft-field"><span class="draft-lbl">Re</span><div class="draft-val" contenteditable="true">Meeting Notes — ${meetingTitle} — ${meetingDate}</div></div>
+    <div class="draft-hint">✏ Click anywhere to edit before sending</div>
+    <div class="draft-body" contenteditable="true">
+      <div class="pnote" contenteditable="true" data-placeholder="Type your personal note here…">Hi all,</div>
+      <div class="eslbl">Action Items</div>
+      ${aiHTML}
+      <br>
+      <div class="eslbl">Notes</div>
+      ${notesHTML}
+      <br>
+      <div>Thanks,</div>
+      <div>Sydney</div>
+    </div>
+    <div class="draft-foot">
+      <button class="dfb s" onclick="doSend()">📧 Send to all</button>
+      <button class="dfb c" onclick="copyDraft()">📋 Copy</button>
+    </div>
+  `;
+  document.getElementById('draftWrap').style.display = 'block';
+  btn.style.display = 'none';
+}
+
+function doSend() {
+  document.getElementById('draftWrap').style.display = 'none';
+  document.getElementById('draftWrap').innerHTML = '';
+  document.getElementById('sendBtn').style.display = 'flex';
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('sendBtn').innerHTML = '<span style="font-size:14px">📧</span> Pull Fireflies recap into email draft';
+  document.getElementById('sentOk').style.display = 'block';
+  setTimeout(() => document.getElementById('sentOk').style.display = 'none', 4000);
+}
+
+function copyDraft() {
+  const body = document.querySelector('.draft-body');
+  if (body) navigator.clipboard.writeText(body.innerText).catch(() => {});
+}
+
+// ── History ───────────────────────────────────────────────────────────────────
 function loadHistory() {
   const all = getAllNotes();
   const items = Object.entries(all)
@@ -303,10 +451,7 @@ function loadHistory() {
     .sort((a, b) => new Date(b[1].updated) - new Date(a[1].updated))
     .slice(0, 10);
   const list = document.getElementById('histList');
-  if (!items.length) {
-    list.innerHTML = '<div class="no-hist">No past notes yet</div>';
-    return;
-  }
+  if (!items.length) { list.innerHTML = '<div style="padding:12px;font-size:12px;color:#888;text-align:center">No past notes yet</div>'; return; }
   list.innerHTML = items.map(([k, v]) => `
     <div class="hist-item" onclick="loadFromHistory('${k}')">
       <div class="hist-date">${v.date || ''}</div>
@@ -318,33 +463,28 @@ function loadHistory() {
 
 function doSearch(q) {
   const all = getAllNotes();
-  const histSection = document.getElementById('histSection');
-  if (!q.trim()) { loadHistory(); return; }
-  const results = Object.entries(all)
-    .filter(([k, v]) => {
-      const text = (v.title + ' ' + v.html.replace(/<[^>]+>/g,' ')).toLowerCase();
-      return text.includes(q.toLowerCase());
-    })
-    .slice(0, 15);
-  const list = document.getElementById('histList');
+  if (!q.trim()) { loadHistory(); document.querySelector('.hist-title').textContent = 'Recent notes'; return; }
+  const results = Object.entries(all).filter(([k, v]) => {
+    const text = ((v.title || '') + ' ' + (v.html || '').replace(/<[^>]+>/g,' ')).toLowerCase();
+    return text.includes(q.toLowerCase());
+  }).slice(0, 15);
   document.querySelector('.hist-title').textContent = results.length ? `Results for "${q}"` : 'No results';
-  if (!results.length) { list.innerHTML = '<div class="no-hist">No notes found</div>'; return; }
-  list.innerHTML = results.map(([k, v]) => {
-    const plain = v.html.replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
-    const hl = plain.replace(new RegExp(q,'gi'), m => `<mark style="background:#fff176">${m}</mark>`);
-    return `<div class="hist-item"><div class="hist-date">${v.date||''}</div><div class="hist-meeting">${v.title||'Untitled'}</div><div class="hist-preview">${hl.slice(0,150)}</div></div>`;
-  }).join('');
+  document.getElementById('histList').innerHTML = results.length
+    ? results.map(([k, v]) => {
+        const plain = (v.html||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+        const hl = plain.replace(new RegExp(q,'gi'), m => `<mark style="background:#fff176">${m}</mark>`);
+        return `<div class="hist-item"><div class="hist-date">${v.date||''}</div><div class="hist-meeting">${v.title||'Untitled'}</div><div class="hist-preview">${hl.slice(0,150)}</div></div>`;
+      }).join('')
+    : '<div style="padding:12px;font-size:12px;color:#888;text-align:center">No notes found</div>';
 }
 
 function loadFromHistory(key) {
-  const all = getAllNotes();
-  const note = all[key];
+  const note = getAllNotes()[key];
   if (!note) return;
   document.getElementById('editor').innerHTML = note.html || '';
   currentColor = note.color || 'yellow';
   applyTheme(currentColor);
   toggleMore();
-  document.getElementById('saveStatus').textContent = 'loaded from history';
 }
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
@@ -353,55 +493,48 @@ function showTab(tab) {
     document.getElementById('pane-' + t).classList.toggle('act', t === tab);
     document.getElementById('tab-' + t).classList.toggle('act', t === tab);
   });
+  if (tab === 'actions' && !ffData) loadFireflies();
 }
 
 function toggleMore() {
   moreOpen = !moreOpen;
   document.getElementById('morePanel').classList.toggle('vis', moreOpen);
   document.getElementById('moreTab').textContent = moreOpen ? '✕' : '⋯';
-  if (moreOpen) loadHistory();
+  if (moreOpen) { loadHistory(); document.querySelector('.search-input').value = ''; document.querySelector('.hist-title').textContent = 'Recent notes'; }
 }
 
-// ── Meeting key ───────────────────────────────────────────────────────────────
 function getMeetingKey(item) {
   try {
     if (item.itemId) return 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
-    const fb = (item.subject||'') + '_' + Date.now();
-    return 'mtg_' + btoa(encodeURIComponent(fb)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+    return 'mtg_' + btoa(encodeURIComponent((item.subject||'') + '_' + Date.now())).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
   } catch(e) { return 'mtg_' + Math.random().toString(36).slice(2); }
 }
 
 // ── Office init ───────────────────────────────────────────────────────────────
 Office.onReady((info) => {
   const item = Office.context.mailbox?.item;
-
-  if (!item) {
-    document.getElementById('noteTitle').textContent = 'No meeting selected';
-    return;
-  }
+  if (!item) { document.getElementById('noteTitle').textContent = 'No meeting selected'; return; }
 
   meetingKey = getMeetingKey(item);
-  const title = item.subject || 'Untitled meeting';
-  document.getElementById('noteTitle').textContent = title;
+  meetingTitle = item.subject || 'Untitled meeting';
+  document.getElementById('noteTitle').textContent = meetingTitle;
 
   if (item.start) {
     const setDate = (d) => {
       const date = new Date(d);
-      const dateStr = date.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-      document.getElementById('noteDate').textContent = dateStr;
+      meetingDate = date.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+      document.getElementById('noteDate').textContent = meetingDate;
       const minsUntil = (date - Date.now()) / 60000;
-      if (minsUntil > 0 && minsUntil <= 20) {
-        document.getElementById('notif').classList.add('vis');
-      }
+      if (minsUntil > 0 && minsUntil <= 20) document.getElementById('notif').classList.add('vis');
     };
     if (typeof item.start.getAsync === 'function') {
       item.start.getAsync(r => { if (r.status === Office.AsyncResultStatus.Succeeded) setDate(r.value); });
-    } else if (item.start instanceof Date) {
-      setDate(item.start);
-    }
+    } else if (item.start instanceof Date) { setDate(item.start); }
   }
 
   loadLocal();
+  // Auto-load Fireflies in background
+  loadFireflies();
 });
 </script>
 </body>
