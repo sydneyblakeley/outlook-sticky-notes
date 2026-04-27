@@ -8,9 +8,7 @@
   <style>
     *{box-sizing:border-box;margin:0;padding:0}
     body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f0ede6;height:100vh;display:flex;flex-direction:column;font-size:13px}
-
-    /* PAYWALL */
-    .paywall{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:20px;text-align:center;gap:12px;background:#f0ede6}
+    .paywall{display:none;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:20px;text-align:center;gap:10px;background:#f0ede6;overflow-y:auto}
     .paywall.vis{display:flex}
     .paywall-icon{font-size:32px}
     .paywall h2{font-size:16px;font-weight:600;color:#1e4d78}
@@ -19,15 +17,13 @@
     .plan-card{width:100%;background:white;border:0.5px solid #ddd;border-radius:8px;padding:12px 14px;text-align:left}
     .plan-name{font-size:13px;font-weight:600;color:#1e4d78;margin-bottom:2px}
     .plan-price{font-size:12px;color:#555;margin-bottom:6px}
-    .plan-features{font-size:11px;color:#666;line-height:1.6}
+    .plan-features{font-size:11px;color:#666;line-height:1.7}
     .plan-btns{display:flex;gap:6px;margin-top:8px}
     .plan-btn{flex:1;font-size:11px;padding:6px 8px;border-radius:5px;border:none;cursor:pointer;font-weight:500;transition:filter .15s}
     .plan-btn:hover{filter:brightness(.9)}
     .plan-btn.monthly{background:#1e4d78;color:white}
     .plan-btn.annual{background:#e8f0fb;color:#1e4d78;border:0.5px solid #1e4d78}
-    .plan-divider{width:100%;height:0.5px;background:#eee}
-
-    /* LOADING */
+    .cancel-note{font-size:10px;color:#888;margin-top:-4px}
     .loading{display:none;flex-direction:column;align-items:center;justify-content:center;height:100vh;gap:10px}
     .loading.vis{display:flex}
     .dots{display:flex;gap:6px}
@@ -35,18 +31,14 @@
     .dot:nth-child(2){animation-delay:.15s}.dot:nth-child(3){animation-delay:.3s}
     @keyframes bounce{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
     .loading-text{font-size:12px;color:#7a6800;font-style:italic}
-
-    /* APP */
     .app{display:none;flex-direction:column;height:100vh}
     .app.vis{display:flex}
     .tabs{display:flex;background:#f3f3f3;border-bottom:1px solid #ddd;flex-shrink:0}
-    .tab{flex:1;padding:9px 4px;font-size:11px;text-align:center;cursor:pointer;color:#666;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+    .tab{flex:1;padding:9px 4px;font-size:11px;text-align:center;cursor:pointer;color:#666;border-bottom:2px solid transparent;white-space:nowrap}
     .tab.act{color:#1e4d78;font-weight:600;border-bottom-color:#1e4d78;background:white}
     .more-tab{padding:9px 10px;font-size:11px;cursor:pointer;color:#666;border-left:1px solid #ddd;flex-shrink:0}
     .pane{flex:1;overflow-y:auto;display:none;flex-direction:column}
     .pane.act{display:flex}
-
-    /* NOTE */
     .note-wrap{padding:10px 12px;flex:1;display:flex;flex-direction:column}
     .tape{width:38px;height:11px;border-radius:2px;margin:0 auto 5px;background:rgba(180,200,255,.5);border:0.5px solid rgba(160,180,240,.4)}
     .note-inner{border-radius:2px 2px 8px 2px;padding:9px 9px 7px;flex:1;display:flex;flex-direction:column;background:#FFF9C4}
@@ -70,8 +62,6 @@
     .csw{width:16px;height:16px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:transform .15s,border-color .15s;flex-shrink:0}
     .csw:hover{transform:scale(1.2)}
     .csw.sel{border-color:#333;transform:scale(1.2)}
-
-    /* ACTIONS */
     .actions-wrap{padding:10px 12px}
     .ff-banner{border-radius:6px;padding:7px 10px;margin-bottom:8px;font-size:11px;font-weight:500}
     .ff-banner.ok{background:#e8f5e9;border:0.5px solid #a5d6a7;color:#2e7d32}
@@ -92,8 +82,6 @@
     .add-row input{flex:1;font-size:12px;padding:5px 7px;border:0.5px solid #ddd;border-radius:5px;background:white;color:#333}
     .add-row input:focus{outline:none;border-color:#1e4d78}
     .add-row button{font-size:11px;padding:5px 10px;border-radius:5px;border:0.5px solid #ddd;cursor:pointer;background:#f5f5f5;color:#333}
-
-    /* SEND */
     .send-wrap{padding:10px 12px}
     .send-btn{width:100%;font-size:12px;padding:9px;border-radius:6px;border:none;background:#1e4d78;color:white;cursor:pointer;font-weight:500;display:flex;align-items:center;justify-content:center;gap:7px;margin-bottom:8px}
     .send-btn:hover{filter:brightness(.9)}
@@ -112,8 +100,6 @@
     .dfb.s{background:#2e7d32;color:white;border-color:#2e7d32;font-weight:500}
     .dfb.c{background:white;color:#333;border-color:#ddd}
     .sent-ok{display:none;background:#e8f5e9;border:0.5px solid #a5d6a7;border-radius:6px;padding:8px 10px;font-size:11px;color:#2e7d32;margin-top:8px;text-align:center}
-
-    /* MORE */
     .more-panel{display:none;border-top:1px solid #ddd;background:white;flex-shrink:0;max-height:280px;overflow-y:auto}
     .more-panel.vis{display:block}
     .search-wrap{padding:8px 12px;border-bottom:0.5px solid #eee;background:white;position:sticky;top:0}
@@ -125,17 +111,14 @@
     .hist-date{font-size:10px;color:#888}
     .hist-meeting{font-size:12px;font-weight:500;color:#333;margin-bottom:2px}
     .hist-preview{font-size:11px;color:#666;line-height:1.4;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
-
-    /* NOTIF */
     .notif{display:none;background:#1e4d78;color:white;padding:6px 12px;font-size:11px;justify-content:space-between;align-items:center;flex-shrink:0}
     .notif.vis{display:flex}
     .notif button{font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.4);background:transparent;color:white;cursor:pointer}
-
+    .trial-bar{background:#fff8e1;border-bottom:0.5px solid #ffe082;padding:5px 12px;font-size:10px;color:#856404;text-align:center;flex-shrink:0}
     .eslbl{font-size:13px;font-weight:500;text-decoration:underline;margin:10px 0 5px;color:#333}
     .ename{font-size:12px;font-weight:500;color:#1e4d78;margin:6px 0 2px}
     .ebul{padding-left:16px;margin:2px 0}
     .ebul li{font-size:12px;color:#333;margin:2px 0;line-height:1.5}
-    .enhead{font-weight:500;font-size:12px;color:#333;margin:6px 0 2px}
   </style>
 </head>
 <body>
@@ -149,35 +132,45 @@
 <!-- PAYWALL -->
 <div class="paywall" id="paywallScreen">
   <div class="paywall-icon">📌</div>
-  <h2>Your 7-day trial has ended</h2>
+  <h2>Your free trial has ended</h2>
   <p>Subscribe to keep your private sticky notes, action items, and meeting recaps.</p>
-  <div class="trial-badge">Cancel anytime</div>
+  <div class="trial-badge">No charge until day 15 · Cancel anytime</div>
 
   <div class="plan-card">
     <div class="plan-name">Pro</div>
-    <div class="plan-price">$4/mo or $40/yr</div>
-    <div class="plan-features">✓ Private sticky notes &amp; color coding<br>✓ History &amp; search<br>✓ Manual action items<br>✓ Send Recap email drafts</div>
+    <div class="plan-price">$4/mo or $40/yr — save 17%</div>
+    <div class="plan-features">
+      ✓ Private sticky notes &amp; color coding<br>
+      ✓ Unlimited history &amp; search<br>
+      ✓ Manual action items<br>
+      ✓ Send Recap email drafts
+    </div>
     <div class="plan-btns">
       <button class="plan-btn monthly" onclick="openLink('https://buy.stripe.com/test_bJeaEPcMr1393DF7ye5sA02')">$4 / month</button>
       <button class="plan-btn annual" onclick="openLink('https://buy.stripe.com/test_14A3cnaEjdPV8XZ8Ci5sA03')">$40 / year</button>
     </div>
   </div>
 
-  <div class="plan-divider"></div>
-
   <div class="plan-card" style="border-color:#6c3483">
-    <div class="plan-name" style="color:#6c3483">Pro + Notetaker</div>
-    <div class="plan-price">$7/mo or $70/yr</div>
-    <div class="plan-features">✓ Everything in Pro<br>✓ Fireflies action item auto-import<br>✓ Otter.ai &amp; Fathom integration<br>✓ Send Recap auto-populated</div>
+    <div class="plan-name" style="color:#6c3483">Pro + Notetaker ⭐ Most popular</div>
+    <div class="plan-price">$7/mo or $70/yr — save 17%</div>
+    <div class="plan-features">
+      ✓ Everything in Pro<br>
+      ✓ Fireflies action item auto-import<br>
+      ✓ Otter.ai &amp; Fathom integration<br>
+      ✓ Send Recap auto-populated from notes
+    </div>
     <div class="plan-btns">
       <button class="plan-btn monthly" style="background:#6c3483" onclick="openLink('https://buy.stripe.com/test_bJe6oz9AfbHN0rt7ye5sA00')">$7 / month</button>
       <button class="plan-btn annual" style="border-color:#6c3483;color:#6c3483" onclick="openLink('https://buy.stripe.com/test_dRm7sD3bRdPV8XZcSy5sA01')">$70 / year</button>
     </div>
   </div>
+  <div class="cancel-note">Questions? Email support@stickynotes.app</div>
 </div>
 
 <!-- APP -->
 <div class="app" id="appScreen">
+  <div class="trial-bar" id="trialBar" style="display:none"></div>
   <div class="notif" id="notif">
     <span>📌 Starting in 15 min — your note is ready</span>
     <button onclick="document.getElementById('notif').classList.remove('vis')">dismiss</button>
@@ -268,7 +261,15 @@
 <script>
 const STORE = 'stickyNotes_v2';
 const API = 'https://outlook-sticky-notes.vercel.app';
-const TRIAL_DAYS = 7;
+const TRIAL_DAYS = 14;
+
+// ── Free access list — these emails never see a paywall ───────────────────────
+const FREE_EMAILS = [
+  'szindroski@maverixhealth.com',
+  'sydneyblakeley@outlook.com',
+  'sydney.zindroski@gmail.com'
+  // Add friend/family/demo emails here
+];
 
 let meetingKey = null;
 let meetingTitle = '';
@@ -278,6 +279,7 @@ let saveTimer = null;
 let moreOpen = false;
 let localActions = [];
 let ffData = null;
+let currentUserEmail = '';
 
 const CT = {
   yellow:{bg:'#FFF9C4',div:'#f0dc00',ink:'#3a3000',inkl:'#7a6800'},
@@ -291,9 +293,15 @@ const CT = {
 
 function openLink(url) { window.open(url, '_blank'); }
 
-// ── Trial logic ───────────────────────────────────────────────────────────────
-function checkTrial() {
-  const key = 'sn_trial_start';
+// ── Access control ────────────────────────────────────────────────────────────
+function checkAccess(email) {
+  // Free list — always full access
+  const emailLower = (email || '').toLowerCase();
+  if (FREE_EMAILS.some(e => e.toLowerCase() === emailLower)) {
+    return { granted: true, reason: 'free', daysLeft: 999 };
+  }
+  // Trial logic
+  const key = 'sn_trial_start_v2';
   let start = localStorage.getItem(key);
   if (!start) {
     start = new Date().toISOString();
@@ -301,7 +309,10 @@ function checkTrial() {
   }
   const days = (Date.now() - new Date(start).getTime()) / (1000 * 60 * 60 * 24);
   const paid = localStorage.getItem('sn_paid') === 'true';
-  return { expired: days > TRIAL_DAYS && !paid, daysLeft: Math.max(0, Math.ceil(TRIAL_DAYS - days)) };
+  const daysLeft = Math.max(0, Math.ceil(TRIAL_DAYS - days));
+  if (paid) return { granted: true, reason: 'paid', daysLeft: 999 };
+  if (days <= TRIAL_DAYS) return { granted: true, reason: 'trial', daysLeft };
+  return { granted: false, reason: 'expired', daysLeft: 0 };
 }
 
 function showScreen(name) {
@@ -311,6 +322,14 @@ function showScreen(name) {
   if (name === 'loading') document.getElementById('loadingScreen').classList.add('vis');
   if (name === 'paywall') document.getElementById('paywallScreen').classList.add('vis');
   if (name === 'app') document.getElementById('appScreen').classList.add('vis');
+}
+
+function showTrialBanner(daysLeft) {
+  const bar = document.getElementById('trialBar');
+  if (daysLeft <= 5 && daysLeft > 0) {
+    bar.style.display = 'block';
+    bar.textContent = `⏰ ${daysLeft} day${daysLeft === 1 ? '' : 's'} left in your free trial — subscribe to keep your notes`;
+  }
 }
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
@@ -332,9 +351,7 @@ function fmt(ev, cmd) { ev.preventDefault(); document.execCommand(cmd, false, nu
 function fmtHL(ev) { ev.preventDefault(); document.execCommand('hiliteColor', false, '#ffff88'); }
 
 // ── Local storage ─────────────────────────────────────────────────────────────
-function getAllNotes() {
-  try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { return {}; }
-}
+function getAllNotes() { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { return {}; } }
 function saveLocal() {
   const all = getAllNotes();
   all[meetingKey] = { html: document.getElementById('editor').innerHTML, color: currentColor, actions: localActions, title: meetingTitle, date: meetingDate, updated: new Date().toISOString() };
@@ -363,10 +380,7 @@ async function loadFireflies() {
     if (data.found && data.my_actions && data.my_actions.length > 0) {
       ffData = data;
       const existing = localActions.filter(a => a.source === 'fireflies');
-      if (existing.length === 0) {
-        data.my_actions.forEach(text => localActions.push({ text, done: false, source: 'fireflies' }));
-        saveLocal();
-      }
+      if (existing.length === 0) { data.my_actions.forEach(text => localActions.push({ text, done: false, source: 'fireflies' })); saveLocal(); }
       banner.className = 'ff-banner ok';
       banner.textContent = `🔥 ${data.my_actions.length} action item${data.my_actions.length > 1 ? 's' : ''} imported from Fireflies`;
       renderActions();
@@ -401,17 +415,8 @@ function renderActions() {
   });
   updateAC();
 }
-function updateAC() {
-  const n = localActions.filter(a => !a.done).length;
-  const el = document.getElementById('ac-count');
-  el.style.display = n ? 'inline' : 'none'; el.textContent = n;
-}
-function addAction() {
-  const inp = document.getElementById('actionInput'); const text = inp.value.trim();
-  if (!text) return;
-  localActions.push({ text, done: false, source: 'manual' });
-  renderActions(); saveLocal(); inp.value = '';
-}
+function updateAC() { const n = localActions.filter(a => !a.done).length; const el = document.getElementById('ac-count'); el.style.display = n ? 'inline' : 'none'; el.textContent = n; }
+function addAction() { const inp = document.getElementById('actionInput'); const text = inp.value.trim(); if (!text) return; localActions.push({ text, done: false, source: 'manual' }); renderActions(); saveLocal(); inp.value = ''; }
 
 // ── Send recap ────────────────────────────────────────────────────────────────
 async function pullDraft() {
@@ -420,15 +425,12 @@ async function pullDraft() {
   document.getElementById('sentOk').style.display = 'none';
   let aiHTML = '';
   if (ffData && ffData.all_actions && Object.keys(ffData.all_actions).length) {
-    Object.entries(ffData.all_actions).forEach(([name, items]) => {
-      if (!items.length) return;
-      aiHTML += `<div class="ename">@${name}</div><ul class="ebul">${items.map(i => `<li>${i}</li>`).join('')}</ul>`;
-    });
+    Object.entries(ffData.all_actions).forEach(([name, items]) => { if (!items.length) return; aiHTML += `<div class="ename">@${name}</div><ul class="ebul">${items.map(i => `<li>${i}</li>`).join('')}</ul>`; });
   } else {
     const mine = localActions.filter(a => !a.done);
     aiHTML = mine.length ? `<ul class="ebul">${mine.map(a => `<li>${a.text}</li>`).join('')}</ul>` : '<div style="font-size:12px;color:#999">No open action items</div>';
   }
-  const notesHTML = ffData?.summary ? `<div class="enhead">Meeting Summary</div><div style="font-size:12px;line-height:1.7;color:#333;margin-bottom:8px">${ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
+  const notesHTML = ffData?.summary ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Summary</div><div style="font-size:12px;line-height:1.7;color:#333">${ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
   const attendees = ffData?.attendees || '';
   document.getElementById('draftWrap').innerHTML = `
     <div class="draft-bar"><button class="dt send" onclick="doSend()">Send</button><button class="dt">Discard</button><button class="dt"><b>B</b></button><button class="dt">•—</button><button class="dt">📎</button></div>
@@ -442,18 +444,13 @@ async function pullDraft() {
       <br><div class="eslbl">Notes</div>${notesHTML}
       <br><div>Thanks,</div><div>Sydney</div>
     </div>
-    <div class="draft-foot">
-      <button class="dfb s" onclick="doSend()">📧 Send to all</button>
-      <button class="dfb c" onclick="copyDraft()">📋 Copy</button>
-    </div>`;
+    <div class="draft-foot"><button class="dfb s" onclick="doSend()">📧 Send to all</button><button class="dfb c" onclick="copyDraft()">📋 Copy</button></div>`;
   document.getElementById('draftWrap').style.display = 'block';
   btn.style.display = 'none';
 }
 function doSend() {
-  document.getElementById('draftWrap').style.display = 'none';
-  document.getElementById('draftWrap').innerHTML = '';
-  const btn = document.getElementById('sendBtn');
-  btn.style.display = 'flex'; btn.disabled = false;
+  document.getElementById('draftWrap').style.display = 'none'; document.getElementById('draftWrap').innerHTML = '';
+  const btn = document.getElementById('sendBtn'); btn.style.display = 'flex'; btn.disabled = false;
   btn.innerHTML = '<span style="font-size:14px">📧</span> Pull Fireflies recap into email draft';
   document.getElementById('sentOk').style.display = 'block';
   setTimeout(() => document.getElementById('sentOk').style.display = 'none', 4000);
@@ -491,8 +488,13 @@ function getMeetingKey(item) {
 
 // ── Office init ───────────────────────────────────────────────────────────────
 Office.onReady((info) => {
-  const trial = checkTrial();
-  if (trial.expired) { showScreen('paywall'); return; }
+  // Get user email from Outlook context
+  try { currentUserEmail = Office.context.mailbox?.userProfile?.emailAddress || ''; } catch(e) { currentUserEmail = ''; }
+
+  // Check access
+  const access = checkAccess(currentUserEmail);
+  if (!access.granted) { showScreen('paywall'); return; }
+  if (access.reason === 'trial') showTrialBanner(access.daysLeft);
 
   const item = Office.context.mailbox?.item;
   if (!item) { document.getElementById('noteTitle').textContent = 'No meeting selected'; showScreen('app'); return; }
