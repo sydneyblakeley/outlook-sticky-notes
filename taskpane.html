@@ -263,13 +263,6 @@ const STORE = 'stickyNotes_v2';
 const API = 'https://outlook-sticky-notes.vercel.app';
 const TRIAL_DAYS = 14;
 
-// ── Free access list — these emails never see a paywall ───────────────────────
-const FREE_EMAILS = [
-  'szindroski@maverixhealth.com',
-  'sydneyblakeley@outlook.com'
-  // Add demo/friend/family Outlook emails here
-];
-
 let meetingKey = null;
 let meetingTitle = '';
 let meetingDate = '';
@@ -292,26 +285,25 @@ const CT = {
 
 function openLink(url) { window.open(url, '_blank'); }
 
-// ── Access control ────────────────────────────────────────────────────────────
-function checkAccess(email) {
-  // Free list — always full access
-  const emailLower = (email || '').toLowerCase();
-  if (FREE_EMAILS.some(e => e.toLowerCase() === emailLower)) {
-    return { granted: true, reason: 'free', daysLeft: 999 };
+// ── Access control (server-side) ──────────────────────────────────────────────
+async function checkAccess(email) {
+  try {
+    const token = btoa(JSON.stringify({ email, iat: Date.now() }));
+    const res = await fetch(`${API}/api/subscription`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    if (!res.ok) throw new Error('Server error');
+    return await res.json();
+  } catch(e) {
+    // Fallback to localStorage if server unreachable
+    const key = 'sn_trial_start_v2';
+    let start = localStorage.getItem(key);
+    if (!start) { start = new Date().toISOString(); localStorage.setItem(key, start); }
+    const days = (Date.now() - new Date(start).getTime()) / (1000 * 60 * 60 * 24);
+    const daysLeft = Math.max(0, Math.ceil(TRIAL_DAYS - days));
+    if (days <= TRIAL_DAYS) return { granted: true, reason: 'trial', daysLeft };
+    return { granted: false, reason: 'expired', daysLeft: 0 };
   }
-  // Trial logic
-  const key = 'sn_trial_start_v2';
-  let start = localStorage.getItem(key);
-  if (!start) {
-    start = new Date().toISOString();
-    localStorage.setItem(key, start);
-  }
-  const days = (Date.now() - new Date(start).getTime()) / (1000 * 60 * 60 * 24);
-  const paid = localStorage.getItem('sn_paid') === 'true';
-  const daysLeft = Math.max(0, Math.ceil(TRIAL_DAYS - days));
-  if (paid) return { granted: true, reason: 'paid', daysLeft: 999 };
-  if (days <= TRIAL_DAYS) return { granted: true, reason: 'trial', daysLeft };
-  return { granted: false, reason: 'expired', daysLeft: 0 };
 }
 
 function showScreen(name) {
@@ -373,8 +365,11 @@ function clearNote() { if (!document.getElementById('editor').innerHTML.trim()) 
 async function loadFireflies() {
   const banner = document.getElementById('ffBanner');
   try {
+    const token = btoa(JSON.stringify({ email: currentUserEmail, iat: Date.now() }));
     const params = new URLSearchParams({ meeting_title: meetingTitle, meeting_date: meetingDate });
-    const res = await fetch(`${API}/api/fireflies?${params}`);
+    const res = await fetch(`${API}/api/fireflies?${params}`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
     const data = await res.json();
     if (data.found && data.my_actions && data.my_actions.length > 0) {
       ffData = data;
@@ -486,12 +481,11 @@ function getMeetingKey(item) {
 }
 
 // ── Office init ───────────────────────────────────────────────────────────────
-Office.onReady((info) => {
-  // Get user email from Outlook context
+Office.onReady(async (info) => {
   try { currentUserEmail = Office.context.mailbox?.userProfile?.emailAddress || ''; } catch(e) { currentUserEmail = ''; }
 
-  // Check access
-  const access = checkAccess(currentUserEmail);
+  // Server-side access check
+  const access = await checkAccess(currentUserEmail);
   if (!access.granted) { showScreen('paywall'); return; }
   if (access.reason === 'trial') showTrialBanner(access.daysLeft);
 
