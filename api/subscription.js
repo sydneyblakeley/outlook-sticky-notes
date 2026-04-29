@@ -1,10 +1,15 @@
+
 // api/subscription.js
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY);
 const TRIAL_DAYS = 14;
-const FREE_EMAILS = ['szindroski@maverixhealth.com', 'sydneyblakeley@outlook.com'];
+const FREE_EMAILS = [
+  'szindroski@maverixhealth.com',
+  'sydneyblakeley@outlook.com',
+  'stickynotes.testuser@outlook.com'
+];
 
 function verifyToken(req) {
   const auth = req.headers.authorization;
