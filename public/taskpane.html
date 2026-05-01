@@ -165,7 +165,7 @@
       <button class="plan-btn annual" style="border-color:#6c3483;color:#6c3483" onclick="openLink('https://buy.stripe.com/test_14AeV59AfbHN6PRg4K5sA05')">$70 / year</button>
     </div>
   </div>
- <div class="cancel-note">Questions? <a href="mailto:stickynotes.help@outlook.com" style="color:#888">stickynotes.help@outlook.com</a> · <a href="https://outlook-sticky-notes.vercel.app/terms.html" target="_blank" style="color:#888">Terms</a> · <a href="https://outlook-sticky-notes.vercel.app/privacy.html" target="_blank" style="color:#888">Privacy</a></div>
+  <div class="cancel-note">Questions? <a href="mailto:stickynotes.help@outlook.com" style="color:#888">stickynotes.help@outlook.com</a> · <a href="https://outlook-sticky-notes.vercel.app/terms.html" target="_blank" style="color:#888">Terms</a> · <a href="https://outlook-sticky-notes.vercel.app/privacy.html" target="_blank" style="color:#888">Privacy</a></div>
 </div>
 
 <!-- APP -->
@@ -295,7 +295,6 @@ async function checkAccess(email) {
     if (!res.ok) throw new Error('Server error');
     return await res.json();
   } catch(e) {
-    // Fallback to localStorage if server unreachable
     const key = 'sn_trial_start_v2';
     let start = localStorage.getItem(key);
     if (!start) { start = new Date().toISOString(); localStorage.setItem(key, start); }
@@ -344,29 +343,34 @@ function fmtHL(ev) {
   const sel = window.getSelection();
   if (!sel || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
-
-  // Check if we're inside any highlight element
-  let node = range.commonAncestorContainer;
-  if (node.nodeType === 3) node = node.parentElement;
-  
-  // Walk up the tree looking for a highlight
-  let hlEl = null;
-  let current = node;
-  const editor = document.getElementById('editor');
-  while (current && current !== editor) {
-    const bg = current.style.backgroundColor;
-    if (bg && (bg.includes('255') || bg.includes('ffff'))) {
-      hlEl = current;
-      break;
-    }
-    current = current.parentElement;
-  }
-
-  if (hlEl) {
-    const frag = document.createDocumentFragment();
-    while (hlEl.firstChild) frag.appendChild(hlEl.firstChild);
-    hlEl.parentNode.replaceChild(frag, hlEl);
-    saveLocal();
+  const frag = range.cloneContents();
+  const tmp = document.createElement('div');
+  tmp.appendChild(frag);
+  let isHL = false;
+  const check = (el) => {
+    if (el.nodeType !== 1) return;
+    const bg = el.style.backgroundColor;
+    if (bg && (bg.includes('255, 255') || bg.includes('ffff'))) isHL = true;
+    el.childNodes.forEach(check);
+  };
+  check(tmp);
+  let parent = range.commonAncestorContainer;
+  if (parent.nodeType === 3) parent = parent.parentElement;
+  const parentBg = parent.style.backgroundColor;
+  if (parentBg && (parentBg.includes('255, 255') || parentBg.includes('ffff88'))) isHL = true;
+  if (isHL) {
+    document.execCommand('hiliteColor', false, 'inherit');
+    setTimeout(() => {
+      document.getElementById('editor').querySelectorAll('font,span').forEach(el => {
+        const bg = el.style.backgroundColor;
+        if (bg && (bg.includes('255, 255') || bg.includes('ffff'))) {
+          const frag = document.createDocumentFragment();
+          while (el.firstChild) frag.appendChild(el.firstChild);
+          el.parentNode.replaceChild(frag, el);
+        }
+      });
+      saveLocal();
+    }, 10);
   } else {
     document.execCommand('hiliteColor', false, '#ffff88');
   }
@@ -515,7 +519,6 @@ function getMeetingKey(item) {
 Office.onReady(async (info) => {
   try { currentUserEmail = Office.context.mailbox?.userProfile?.emailAddress || ''; } catch(e) { currentUserEmail = ''; }
 
-  // Server-side access check
   const access = await checkAccess(currentUserEmail);
   if (!access.granted) { showScreen('paywall'); return; }
   if (access.reason === 'trial') showTrialBanner(access.daysLeft);
