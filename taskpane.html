@@ -344,10 +344,22 @@ function fmtHL(ev) {
   const sel = window.getSelection();
   if (!sel || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
-  const ancestor = range.commonAncestorContainer;
-  const el = ancestor.nodeType === 3 ? ancestor.parentElement : ancestor;
-  const bg = window.getComputedStyle(el).backgroundColor;
-  const isHL = bg === 'rgb(255, 255, 136)' || bg === 'rgb(255, 255, 136)' || el.style.backgroundColor === '#ffff88';
+  const frag = range.cloneContents();
+  const tmp = document.createElement('div');
+  tmp.appendChild(frag);
+  let isHL = false;
+  const check = (el) => {
+    if (el.nodeType !== 1) return;
+    const bg = el.style.backgroundColor;
+    const computed = window.getComputedStyle(el).backgroundColor;
+    if (bg.includes('255, 255') || bg.includes('ffff') || computed === 'rgb(255, 255, 136)') isHL = true;
+    el.childNodes.forEach(check);
+  };
+  check(tmp);
+  let parent = range.commonAncestorContainer;
+  if (parent.nodeType === 3) parent = parent.parentElement;
+  const parentBg = parent.style.backgroundColor;
+  if (parentBg && (parentBg.includes('255, 255') || parentBg.includes('ffff88'))) isHL = true;
   document.execCommand('hiliteColor', false, isHL ? 'transparent' : '#ffff88');
 }
 
