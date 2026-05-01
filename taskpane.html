@@ -345,21 +345,38 @@ function fmtHL(ev) {
   if (!sel || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
 
-  // Check if selection is inside a highlight
+  // Check if already highlighted
   let parent = range.commonAncestorContainer;
   if (parent.nodeType === 3) parent = parent.parentElement;
-  const parentBg = parent.style.backgroundColor;
-  const isHL = parentBg && (parentBg.includes('255, 255') || parentBg.includes('ffff'));
+  const isHL = parent && (
+    parent.style.backgroundColor.includes('255, 255') ||
+    parent.style.backgroundColor.includes('ffff') ||
+    parent.tagName === 'FONT' && parent.color === '#ffff88'
+  );
 
   if (isHL) {
-    // Manually unwrap — move children out of the highlight span, delete the span
-    const span = parent;
-    const fragment = document.createDocumentFragment();
-    while (span.firstChild) fragment.appendChild(span.firstChild);
-    span.parentNode.replaceChild(fragment, span);
+    // Unwrap all highlight spans/fonts in the editor
+    const editor = document.getElementById('editor');
+    editor.querySelectorAll('[style*="background"], font').forEach(el => {
+      const bg = el.style.backgroundColor || '';
+      if (bg.includes('255, 255') || bg.includes('ffff')) {
+        const frag = document.createDocumentFragment();
+        while (el.firstChild) frag.appendChild(el.firstChild);
+        el.parentNode.replaceChild(frag, el);
+      }
+    });
     saveLocal();
   } else {
-    document.execCommand('hiliteColor', false, '#ffff88');
+    // Apply highlight using a span directly
+    const span = document.createElement('span');
+    span.style.backgroundColor = '#ffff88';
+    try {
+      range.surroundContents(span);
+    } catch(e) {
+      // surroundContents fails on partial selections across elements
+      document.execCommand('hiliteColor', false, '#ffff88');
+    }
+    saveLocal();
   }
 }
 
