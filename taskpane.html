@@ -345,8 +345,16 @@ function fmtHL(ev) {
   if (!sel || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
   const parent = range.commonAncestorContainer.parentElement;
-  const isHighlighted = parent && (parent.style.backgroundColor === 'rgb(255, 255, 136)' || parent.style.backgroundColor === '#ffff88');
-  document.execCommand('hiliteColor', false, isHighlighted ? 'transparent' : '#ffff88');
+  const isHighlighted = parent && window.getComputedStyle(parent).backgroundColor === 'rgb(255, 255, 136)';
+  if (isHighlighted) {
+    // Unwrap the highlight span
+    const span = parent;
+    const fragment = document.createDocumentFragment();
+    while (span.firstChild) fragment.appendChild(span.firstChild);
+    span.parentNode.replaceChild(fragment, span);
+  } else {
+    document.execCommand('hiliteColor', false, '#ffff88');
+  }
 }
 
 // ── Local storage ─────────────────────────────────────────────────────────────
