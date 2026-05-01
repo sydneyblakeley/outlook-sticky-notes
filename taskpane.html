@@ -345,38 +345,30 @@ function fmtHL(ev) {
   if (!sel || sel.isCollapsed) return;
   const range = sel.getRangeAt(0);
 
-  // Check if already highlighted
-  let parent = range.commonAncestorContainer;
-  if (parent.nodeType === 3) parent = parent.parentElement;
-  const isHL = parent && (
-    parent.style.backgroundColor.includes('255, 255') ||
-    parent.style.backgroundColor.includes('ffff') ||
-    parent.tagName === 'FONT' && parent.color === '#ffff88'
-  );
+  // Check if we're inside any highlight element
+  let node = range.commonAncestorContainer;
+  if (node.nodeType === 3) node = node.parentElement;
+  
+  // Walk up the tree looking for a highlight
+  let hlEl = null;
+  let current = node;
+  const editor = document.getElementById('editor');
+  while (current && current !== editor) {
+    const bg = current.style.backgroundColor;
+    if (bg && (bg.includes('255') || bg.includes('ffff'))) {
+      hlEl = current;
+      break;
+    }
+    current = current.parentElement;
+  }
 
-  if (isHL) {
-    // Unwrap all highlight spans/fonts in the editor
-    const editor = document.getElementById('editor');
-    editor.querySelectorAll('[style*="background"], font').forEach(el => {
-      const bg = el.style.backgroundColor || '';
-      if (bg.includes('255, 255') || bg.includes('ffff')) {
-        const frag = document.createDocumentFragment();
-        while (el.firstChild) frag.appendChild(el.firstChild);
-        el.parentNode.replaceChild(frag, el);
-      }
-    });
+  if (hlEl) {
+    const frag = document.createDocumentFragment();
+    while (hlEl.firstChild) frag.appendChild(hlEl.firstChild);
+    hlEl.parentNode.replaceChild(frag, hlEl);
     saveLocal();
   } else {
-    // Apply highlight using a span directly
-    const span = document.createElement('span');
-    span.style.backgroundColor = '#ffff88';
-    try {
-      range.surroundContents(span);
-    } catch(e) {
-      // surroundContents fails on partial selections across elements
-      document.execCommand('hiliteColor', false, '#ffff88');
-    }
-    saveLocal();
+    document.execCommand('hiliteColor', false, '#ffff88');
   }
 }
 
