@@ -339,7 +339,15 @@ function applyTheme(c) {
 }
 function setColor(c) { currentColor = c; applyTheme(c); saveLocal(); }
 function fmt(ev, cmd) { ev.preventDefault(); document.execCommand(cmd, false, null); }
-function fmtHL(ev) { ev.preventDefault(); document.execCommand('hiliteColor', false, '#ffff88'); }
+function fmtHL(ev) {
+  ev.preventDefault();
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed) return;
+  const range = sel.getRangeAt(0);
+  const parent = range.commonAncestorContainer.parentElement;
+  const isHighlighted = parent && (parent.style.backgroundColor === 'rgb(255, 255, 136)' || parent.style.backgroundColor === '#ffff88');
+  document.execCommand('hiliteColor', false, isHighlighted ? 'transparent' : '#ffff88');
+}
 
 // ── Local storage ─────────────────────────────────────────────────────────────
 function getAllNotes() { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { return {}; } }
