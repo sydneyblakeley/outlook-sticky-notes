@@ -351,8 +351,7 @@ function fmtHL(ev) {
   const check = (el) => {
     if (el.nodeType !== 1) return;
     const bg = el.style.backgroundColor;
-    const computed = window.getComputedStyle(el).backgroundColor;
-    if (bg.includes('255, 255') || bg.includes('ffff') || computed === 'rgb(255, 255, 136)') isHL = true;
+    if (bg.includes('255, 255') || bg.includes('ffff')) isHL = true;
     el.childNodes.forEach(check);
   };
   check(tmp);
@@ -360,7 +359,24 @@ function fmtHL(ev) {
   if (parent.nodeType === 3) parent = parent.parentElement;
   const parentBg = parent.style.backgroundColor;
   if (parentBg && (parentBg.includes('255, 255') || parentBg.includes('ffff88'))) isHL = true;
-  document.execCommand('hiliteColor', false, isHL ? 'transparent' : '#ffff88');
+
+  if (isHL) {
+    // Remove highlight by unwrapping spans with highlight background
+    document.execCommand('hiliteColor', false, 'inherit');
+    setTimeout(() => {
+      const editor = document.getElementById('editor');
+      editor.querySelectorAll('font, span').forEach(el => {
+        const bg = el.style.backgroundColor;
+        if (bg && (bg.includes('255, 255') || bg.includes('ffff'))) {
+          el.style.backgroundColor = '';
+          if (!el.getAttribute('style')) el.removeAttribute('style');
+        }
+      });
+      saveLocal();
+    }, 10);
+  } else {
+    document.execCommand('hiliteColor', false, '#ffff88');
+  }
 }
 
 // ── Local storage ─────────────────────────────────────────────────────────────
