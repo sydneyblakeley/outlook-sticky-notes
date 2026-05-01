@@ -343,15 +343,25 @@ function fmtHL(ev) {
   ev.preventDefault();
   const sel = window.getSelection();
   if (!sel || sel.isCollapsed) return;
+  
+  // Check if any part of selection is highlighted
   const range = sel.getRangeAt(0);
-  const parent = range.commonAncestorContainer.parentElement;
-  const isHighlighted = parent && window.getComputedStyle(parent).backgroundColor === 'rgb(255, 255, 136)';
-  if (isHighlighted) {
-    // Unwrap the highlight span
-    const span = parent;
-    const fragment = document.createDocumentFragment();
-    while (span.firstChild) fragment.appendChild(span.firstChild);
-    span.parentNode.replaceChild(fragment, span);
+  const container = document.createElement('div');
+  container.appendChild(range.cloneContents());
+  const highlighted = container.querySelector('[style*="background"]') || 
+    (range.commonAncestorContainer.parentElement?.style.backgroundColor === 'rgb(255, 255, 136)');
+  
+  if (highlighted) {
+    // Remove all highlight from selection by setting to inherit
+    document.execCommand('hiliteColor', false, 'inherit');
+    // Also try removing background inline styles
+    const spans = document.getElementById('editor').querySelectorAll('[style*="background"]');
+    spans.forEach(span => {
+      if (window.getComputedStyle(span).backgroundColor === 'rgb(255, 255, 136)') {
+        span.style.backgroundColor = '';
+        if (!span.getAttribute('style')) span.removeAttribute('style');
+      }
+    });
   } else {
     document.execCommand('hiliteColor', false, '#ffff88');
   }
