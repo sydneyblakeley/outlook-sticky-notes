@@ -343,28 +343,12 @@ function fmtHL(ev) {
   ev.preventDefault();
   const sel = window.getSelection();
   if (!sel || sel.isCollapsed) return;
-  
-  // Check if any part of selection is highlighted
   const range = sel.getRangeAt(0);
-  const container = document.createElement('div');
-  container.appendChild(range.cloneContents());
-  const highlighted = container.querySelector('[style*="background"]') || 
-    (range.commonAncestorContainer.parentElement?.style.backgroundColor === 'rgb(255, 255, 136)');
-  
-  if (highlighted) {
-    // Remove all highlight from selection by setting to inherit
-    document.execCommand('hiliteColor', false, 'inherit');
-    // Also try removing background inline styles
-    const spans = document.getElementById('editor').querySelectorAll('[style*="background"]');
-    spans.forEach(span => {
-      if (window.getComputedStyle(span).backgroundColor === 'rgb(255, 255, 136)') {
-        span.style.backgroundColor = '';
-        if (!span.getAttribute('style')) span.removeAttribute('style');
-      }
-    });
-  } else {
-    document.execCommand('hiliteColor', false, '#ffff88');
-  }
+  const ancestor = range.commonAncestorContainer;
+  const el = ancestor.nodeType === 3 ? ancestor.parentElement : ancestor;
+  const bg = window.getComputedStyle(el).backgroundColor;
+  const isHL = bg === 'rgb(255, 255, 136)' || bg === 'rgb(255, 255, 136)' || el.style.backgroundColor === '#ffff88';
+  document.execCommand('hiliteColor', false, isHL ? 'transparent' : '#ffff88');
 }
 
 // ── Local storage ─────────────────────────────────────────────────────────────
