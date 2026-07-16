@@ -12,8 +12,8 @@
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Sticky Notes for Outlook"/>
   <Description DefaultValue="Private sticky notes attached to your calendar meetings — visible only to you."/>
-  <IconUrl DefaultValue="https://outlook-sticky-notes.vercel.app/assets/icon-64.png"/>
-  <HighResolutionIconUrl DefaultValue="https://outlook-sticky-notes.vercel.app/assets/icon-128.png"/>
+  <IconUrl DefaultValue="https://outlook-sticky-notes.vercel.app/icon-64.png"/>
+  <HighResolutionIconUrl DefaultValue="https://outlook-sticky-notes.vercel.app/icon-128.png"/>
   <SupportUrl DefaultValue="https://outlook-sticky-notes.vercel.app/support.html"/>
 
   <Hosts>
@@ -68,7 +68,6 @@
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>ButtonId1</TaskpaneId>
                     <SourceLocation resid="Taskpane.Url"/>
                   </Action>
                 </Control>
@@ -91,7 +90,6 @@
                     <bt:Image size="80" resid="Icon.80x80"/>
                   </Icon>
                   <Action xsi:type="ShowTaskpane">
-                    <TaskpaneId>ButtonId2</TaskpaneId>
                     <SourceLocation resid="Taskpane.Url"/>
                   </Action>
                 </Control>
@@ -104,9 +102,9 @@
 
     <Resources>
       <bt:Images>
-        <bt:Image id="Icon.16x16" DefaultValue="https://outlook-sticky-notes.vercel.app/assets/icon-16.png"/>
-        <bt:Image id="Icon.32x32" DefaultValue="https://outlook-sticky-notes.vercel.app/assets/icon-32.png"/>
-        <bt:Image id="Icon.80x80" DefaultValue="https://outlook-sticky-notes.vercel.app/assets/icon-80.png"/>
+        <bt:Image id="Icon.16x16" DefaultValue="https://outlook-sticky-notes.vercel.app/icon-16.png"/>
+        <bt:Image id="Icon.32x32" DefaultValue="https://outlook-sticky-notes.vercel.app/icon-32.png"/>
+        <bt:Image id="Icon.80x80" DefaultValue="https://outlook-sticky-notes.vercel.app/icon-80.png"/>
       </bt:Images>
       <bt:Urls>
         <bt:Url id="Commands.Url" DefaultValue="https://outlook-sticky-notes.vercel.app/commands.html"/>
