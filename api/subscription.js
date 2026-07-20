@@ -8,7 +8,8 @@ const TRIAL_DAYS = 14;
 const FREE_EMAILS = [
   'szindroski@maverixhealth.com',
   'sydneyblakeley@outlook.com',
-  'stickynotes.testuser@outlook.com'
+  'stickynotes.testuser@outlook.com',
+  'admin@a830edad90508491205202619.onmicrosoft.com'
 ];
 
 function verifyToken(req) {
