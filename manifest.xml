@@ -6,12 +6,12 @@
   xmlns:mailappor="http://schemas.microsoft.com/office/mailappversionoverrides/1.0"
   xsi:type="MailApp">
 
-  <Id>a1b2c3d4-e5f6-7890-abcd-ef1234567890</Id>
-  <Version>1.0.3.0</Version>
+  <Id>876a9f68-bbce-4535-8680-ef2d7b409187</Id>
+  <Version>1.0.4.0</Version>
   <ProviderName>Syd Solutions</ProviderName>
   <DefaultLocale>en-US</DefaultLocale>
   <DisplayName DefaultValue="Sticky Notes for Outlook"/>
-  <Description DefaultValue="Private sticky notes attached to your calendar meetings — visible only to you."/>
+  <Description DefaultValue="Private sticky notes attached to your calendar meetings — visible only to you. Jot down prep notes, capture action items, and send meeting recaps without anyone else seeing your notes."/>
   <IconUrl DefaultValue="https://outlook-sticky-notes.vercel.app/icon-64.png"/>
   <HighResolutionIconUrl DefaultValue="https://outlook-sticky-notes.vercel.app/icon-128.png"/>
   <SupportUrl DefaultValue="https://outlook-sticky-notes.vercel.app/support.html"/>
