@@ -9,7 +9,9 @@ const FREE_EMAILS = [
   'szindroski@maverixhealth.com',
   'sydneyblakeley@outlook.com',
   'stickynotes.testuser@outlook.com',
-  'admin@a830edad90508491205202619.onmicrosoft.com'
+  'admin@a830edad90508491205202619.onmicrosoft.com',
+  'admin@a830edad90508491205202621.onmicrosoft.com',
+  'admin@a830edad90508490905202614.onmicrosoft.com'
 ];
 
 function verifyToken(req) {
