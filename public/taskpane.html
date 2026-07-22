@@ -566,8 +566,22 @@ function setMeetingDate(d) {
 
 function initMeeting(item) {
   meetingKey = getMeetingKey(item);
-  meetingTitle = item.subject || 'Untitled meeting';
-  document.getElementById('noteTitle').textContent = meetingTitle;
+
+  // subject can be a string (read mode) or an object with getAsync (compose mode)
+  if (item.subject && typeof item.subject.getAsync === 'function') {
+    item.subject.getAsync(r => {
+      if (r.status === Office.AsyncResultStatus.Succeeded) {
+        meetingTitle = r.value || 'Untitled meeting';
+      } else {
+        meetingTitle = 'Untitled meeting';
+      }
+      document.getElementById('noteTitle').textContent = meetingTitle;
+      meetingKey = getMeetingKey(item);
+    });
+  } else {
+    meetingTitle = (typeof item.subject === 'string' ? item.subject : null) || 'Untitled meeting';
+    document.getElementById('noteTitle').textContent = meetingTitle;
+  }
 
   if (item.start) {
     if (typeof item.start.getAsync === 'function') {
