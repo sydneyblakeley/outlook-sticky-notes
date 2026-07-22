@@ -52,6 +52,7 @@
     .note-title{font-size:10px;text-transform:uppercase;letter-spacing:.05em;font-weight:500;color:#7a6800}
     .note-date{font-size:10px;opacity:.7;color:#7a6800}
     .note-div{height:1px;margin-bottom:5px;opacity:.4;background:#f0dc00}
+    .fre-tip{background:#fffde7;border:0.5px solid #ffe082;border-radius:5px;padding:7px 9px;margin-bottom:6px;font-size:11px;color:#856404;line-height:1.6;display:none}
     .rte{display:flex;gap:2px;padding:3px 0 5px;flex-wrap:wrap;align-items:center}
     .tb{font-size:11px;padding:2px 5px;border-radius:3px;border:0.5px solid transparent;cursor:pointer;background:transparent;line-height:1;color:#3a3000}
     .tb:hover{background:rgba(0,0,0,.08)}
@@ -141,7 +142,6 @@
   <h2>Your free trial has ended</h2>
   <p>Subscribe to keep your private sticky notes, action items, and meeting recaps.</p>
   <div class="trial-badge">No charge until day 15 · Cancel anytime</div>
-
   <div class="plan-card">
     <div class="plan-name">Pro</div>
     <div class="plan-price">$4/mo or $40/yr — save 17%</div>
@@ -156,7 +156,6 @@
       <button class="plan-btn annual" onclick="openLink('https://buy.stripe.com/28E6ozcG60rq6bw8lIgrS03')">$40 / year</button>
     </div>
   </div>
-
   <div class="plan-card" style="border-color:#6c3483">
     <div class="plan-name" style="color:#6c3483">Pro + Notetaker ⭐ Most popular</div>
     <div class="plan-price">$7/mo or $70/yr — save 17%</div>
@@ -174,18 +173,18 @@
   <div class="cancel-note">Questions? <a href="mailto:stickynotes.help@outlook.com" style="color:#888">stickynotes.help@outlook.com</a> · <a href="https://outlook-sticky-notes.vercel.app/terms.html" target="_blank" style="color:#888">Terms</a> · <a href="https://outlook-sticky-notes.vercel.app/privacy.html" target="_blank" style="color:#888">Privacy</a></div>
 </div>
 
-<!-- WELCOME (First Run Experience) -->
+<!-- WELCOME (First Run Experience - no meeting open) -->
 <div class="welcome" id="welcomeScreen">
   <div class="welcome-icon">📌</div>
   <h2>Welcome to Sticky Notes for Outlook</h2>
   <p>Your private meeting companion — notes only you can see, attached to every calendar event.</p>
   <div class="welcome-steps">
     <div>📅 <strong>Open a calendar event</strong> to get started</div>
-    <div>📝 <strong>Note tab</strong> — write private prep notes</div>
-    <div>✅ <strong>Actions tab</strong> — track action items</div>
-    <div>📧 <strong>Send tab</strong> — generate a meeting recap email</div>
+    <div>📝 <strong>Note tab</strong> — write private prep notes before, during, or after meetings</div>
+    <div>✅ <strong>Actions tab</strong> — track personal action items per meeting</div>
+    <div>📧 <strong>Send tab</strong> — generate a formatted meeting recap email in seconds</div>
   </div>
-  <p style="font-size:11px;color:#888">Your notes are never shared with other attendees.</p>
+  <p style="font-size:11px;color:#888">Your notes are never shared with other attendees. Start a free 14-day trial — no credit card required.</p>
 </div>
 
 <!-- APP -->
@@ -212,6 +211,12 @@
           <span class="note-date" id="noteDate"></span>
         </div>
         <div class="note-div"></div>
+        <div class="fre-tip" id="freTip">
+          📌 <strong>Welcome to Sticky Notes for Outlook!</strong><br>
+          This is your private note for this meeting — only you can see it. Jot down prep notes, questions, or agenda items. Notes auto-save and are tied to this specific meeting.<br>
+          Use the <strong>Actions tab</strong> to track action items and the <strong>Send tab</strong> to generate a recap email after the meeting.<br>
+          <span style="text-decoration:underline;cursor:pointer;font-weight:500" onclick="dismissFre()">Got it, dismiss</span>
+        </div>
         <div class="rte">
           <button class="tb" onmousedown="fmt(event,'bold')"><b>B</b></button>
           <button class="tb" onmousedown="fmt(event,'italic')"><i>I</i></button>
@@ -282,6 +287,7 @@
 const STORE = 'stickyNotes_v2';
 const API = 'https://outlook-sticky-notes.vercel.app';
 const TRIAL_DAYS = 14;
+const FRE_KEY = 'sn_fre_dismissed';
 
 let meetingKey = null;
 let meetingTitle = '';
@@ -304,6 +310,7 @@ const CT = {
 };
 
 function openLink(url) { window.open(url, '_blank'); }
+function dismissFre() { localStorage.setItem(FRE_KEY, '1'); document.getElementById('freTip').style.display = 'none'; }
 
 // ── Screen management ─────────────────────────────────────────────────────────
 function showScreen(name) {
@@ -411,8 +418,17 @@ function saveLocal() {
 }
 function loadLocal() {
   const note = getAllNotes()[meetingKey];
-  if (note) { document.getElementById('editor').innerHTML = note.html || ''; currentColor = note.color || 'yellow'; localActions = note.actions || []; }
-  else { localActions = []; }
+  if (note) {
+    document.getElementById('editor').innerHTML = note.html || '';
+    currentColor = note.color || 'yellow';
+    localActions = note.actions || [];
+  } else {
+    localActions = [];
+    // Show first run tip if not previously dismissed
+    if (!localStorage.getItem(FRE_KEY)) {
+      document.getElementById('freTip').style.display = 'block';
+    }
+  }
   applyTheme(currentColor);
   renderActions();
 }
@@ -484,6 +500,7 @@ async function pullDraft() {
   }
   const notesHTML = ffData?.summary ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Summary</div><div style="font-size:12px;line-height:1.7;color:#333">${ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
   const attendees = ffData?.attendees || '';
+  const senderName = currentUserEmail ? currentUserEmail.split('@')[0] : 'Sydney';
   document.getElementById('draftWrap').innerHTML = `
     <div class="draft-bar"><button class="dt send" onclick="doSend()">Send</button><button class="dt">Discard</button><button class="dt"><b>B</b></button><button class="dt">•—</button><button class="dt">📎</button></div>
     <div class="draft-field"><span class="draft-lbl">To</span><div class="draft-val" contenteditable="true">${attendees}</div></div>
@@ -494,7 +511,7 @@ async function pullDraft() {
       <div style="min-height:24px;border-bottom:1px dashed #ddd;padding-bottom:6px;margin-bottom:8px;color:#999;font-style:italic;outline:none" contenteditable="true">Hi all,</div>
       <div class="eslbl">Action Items</div>${aiHTML}
       <br><div class="eslbl">Notes</div>${notesHTML}
-      <br><div>Thanks,</div><div>${currentUserEmail ? currentUserEmail.split('@')[0] : 'Sydney'}</div>
+      <br><div>Thanks,</div><div>${senderName}</div>
     </div>
     <div class="draft-foot"><button class="dfb s" onclick="doSend()">📧 Send to all</button><button class="dfb c" onclick="copyDraft()">📋 Copy</button></div>`;
   document.getElementById('draftWrap').style.display = 'block';
@@ -538,13 +555,20 @@ function getMeetingKey(item) {
   try { if (item.itemId) return 'mtg_'+btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40); return 'mtg_'+btoa(encodeURIComponent((item.subject||'')+'_'+Date.now())).replace(/[^a-zA-Z0-9]/g,'').slice(0,40); } catch(e) { return 'mtg_'+Math.random().toString(36).slice(2); }
 }
 
-// ── Init meeting data ─────────────────────────────────────────────────────────
+// ── Init meeting ──────────────────────────────────────────────────────────────
+function setMeetingDate(d) {
+  const date = new Date(d);
+  meetingDate = date.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
+  document.getElementById('noteDate').textContent = meetingDate;
+  const minsUntil = (date - Date.now()) / 60000;
+  if (minsUntil > 0 && minsUntil <= 20) document.getElementById('notif').classList.add('vis');
+}
+
 function initMeeting(item) {
   meetingKey = getMeetingKey(item);
   meetingTitle = item.subject || 'Untitled meeting';
   document.getElementById('noteTitle').textContent = meetingTitle;
 
-  // Try getAsync first (read mode), fall back to direct property (compose mode)
   if (item.start) {
     if (typeof item.start.getAsync === 'function') {
       item.start.getAsync(r => {
@@ -564,14 +588,6 @@ function initMeeting(item) {
   showScreen('app');
 }
 
-function setMeetingDate(d) {
-  const date = new Date(d);
-  meetingDate = date.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
-  document.getElementById('noteDate').textContent = meetingDate;
-  const minsUntil = (date - Date.now()) / 60000;
-  if (minsUntil > 0 && minsUntil <= 20) document.getElementById('notif').classList.add('vis');
-}
-
 // ── Office init ───────────────────────────────────────────────────────────────
 Office.onReady(async (info) => {
   try { currentUserEmail = Office.context.mailbox?.userProfile?.emailAddress || ''; } catch(e) { currentUserEmail = ''; }
@@ -582,7 +598,6 @@ Office.onReady(async (info) => {
 
   const item = Office.context.mailbox?.item;
   if (!item) {
-    // No meeting open — show welcome/first run experience
     showScreen('welcome');
     return;
   }
