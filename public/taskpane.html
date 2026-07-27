@@ -173,7 +173,7 @@
   <div class="cancel-note">Questions? <a href="mailto:stickynotes.help@outlook.com" style="color:#888">stickynotes.help@outlook.com</a> · <a href="https://outlook-sticky-notes.vercel.app/terms.html" target="_blank" style="color:#888">Terms</a> · <a href="https://outlook-sticky-notes.vercel.app/privacy.html" target="_blank" style="color:#888">Privacy</a></div>
 </div>
 
-<!-- WELCOME (First Run Experience - no meeting open) -->
+<!-- WELCOME -->
 <div class="welcome" id="welcomeScreen">
   <div class="welcome-icon">📌</div>
   <h2>Welcome to Sticky Notes for Outlook</h2>
@@ -312,7 +312,6 @@ const CT = {
 function openLink(url) { window.open(url, '_blank'); }
 function dismissFre() { localStorage.setItem(FRE_KEY, '1'); document.getElementById('freTip').style.display = 'none'; }
 
-// ── Screen management ─────────────────────────────────────────────────────────
 function showScreen(name) {
   ['loadingScreen','paywallScreen','welcomeScreen','appScreen'].forEach(id => {
     document.getElementById(id).classList.remove('vis');
@@ -323,7 +322,6 @@ function showScreen(name) {
   if (name === 'app') document.getElementById('appScreen').classList.add('vis');
 }
 
-// ── Access control (server-side) ──────────────────────────────────────────────
 async function checkAccess(email) {
   try {
     const token = btoa(JSON.stringify({ email, iat: Date.now() }));
@@ -351,7 +349,6 @@ function showTrialBanner(daysLeft) {
   }
 }
 
-// ── Theme ─────────────────────────────────────────────────────────────────────
 function applyTheme(c) {
   const t = CT[c] || CT.yellow;
   document.getElementById('noteInner').style.background = t.bg;
@@ -405,7 +402,6 @@ function fmtHL(ev) {
   }
 }
 
-// ── Local storage ─────────────────────────────────────────────────────────────
 function getAllNotes() { try { return JSON.parse(localStorage.getItem(STORE) || '{}'); } catch { return {}; } }
 function saveLocal() {
   if (!meetingKey) return;
@@ -424,7 +420,6 @@ function loadLocal() {
     localActions = note.actions || [];
   } else {
     localActions = [];
-    // Show first run tip if not previously dismissed
     if (!localStorage.getItem(FRE_KEY)) {
       document.getElementById('freTip').style.display = 'block';
     }
@@ -435,7 +430,6 @@ function loadLocal() {
 function onType() { document.getElementById('saveStatus').textContent = '…'; clearTimeout(saveTimer); saveTimer = setTimeout(saveLocal, 900); }
 function clearNote() { if (!document.getElementById('editor').innerHTML.trim()) return; if (!confirm('Clear this note?')) return; document.getElementById('editor').innerHTML = ''; saveLocal(); }
 
-// ── Fireflies ─────────────────────────────────────────────────────────────────
 async function loadFireflies() {
   const banner = document.getElementById('ffBanner');
   try {
@@ -463,7 +457,6 @@ async function loadFireflies() {
   } catch(e) { banner.className = 'ff-banner none'; banner.textContent = 'Add action items manually'; }
 }
 
-// ── Actions ───────────────────────────────────────────────────────────────────
 function renderActions() {
   const list = document.getElementById('actionList');
   list.innerHTML = '';
@@ -486,7 +479,6 @@ function renderActions() {
 function updateAC() { const n = localActions.filter(a => !a.done).length; const el = document.getElementById('ac-count'); el.style.display = n ? 'inline' : 'none'; el.textContent = n; }
 function addAction() { const inp = document.getElementById('actionInput'); const text = inp.value.trim(); if (!text) return; localActions.push({ text, done: false, source: 'manual' }); renderActions(); saveLocal(); inp.value = ''; }
 
-// ── Send recap ────────────────────────────────────────────────────────────────
 async function pullDraft() {
   const btn = document.getElementById('sendBtn');
   btn.disabled = true; btn.innerHTML = '<span>⏳</span> Building draft…';
@@ -526,7 +518,6 @@ function doSend() {
 }
 function copyDraft() { const b = document.querySelector('.draft-body'); if (b) navigator.clipboard.writeText(b.innerText).catch(() => {}); }
 
-// ── History ───────────────────────────────────────────────────────────────────
 function loadHistory() {
   const items = Object.entries(getAllNotes()).filter(([k,v]) => v.html?.trim()).sort((a,b) => new Date(b[1].updated)-new Date(a[1].updated)).slice(0,10);
   const list = document.getElementById('histList');
@@ -540,7 +531,6 @@ function doSearch(q) {
 }
 function loadFromHistory(key) { const note = getAllNotes()[key]; if (!note) return; document.getElementById('editor').innerHTML = note.html||''; currentColor = note.color||'yellow'; applyTheme(currentColor); toggleMore(); }
 
-// ── Tabs ──────────────────────────────────────────────────────────────────────
 function showTab(tab) {
   ['note','actions','send'].forEach(t => { document.getElementById('pane-'+t).classList.toggle('act',t===tab); document.getElementById('tab-'+t).classList.toggle('act',t===tab); });
   if (tab === 'actions' && !ffData) loadFireflies();
@@ -551,20 +541,7 @@ function toggleMore() {
   document.getElementById('moreTab').textContent = moreOpen ? '✕' : '⋯';
   if (moreOpen) { loadHistory(); document.querySelector('.search-input').value = ''; document.querySelector('.hist-title').textContent = 'Recent notes'; }
 }
-function getMeetingKey(item) {
-  try {
-    // Read mode — use stable itemId
-    if (item.itemId) return 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
-    // Compose mode — use subject + date as stable key (no Date.now())
-    const subject = (typeof item.subject === 'string' ? item.subject : meetingTitle) || 'untitled';
-    const date = meetingDate || '';
-    return 'mtg_' + btoa(encodeURIComponent(subject + '_' + date)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
-  } catch(e) {
-    return 'mtg_' + Math.random().toString(36).slice(2);
-  }
-}
 
-// ── Init meeting ──────────────────────────────────────────────────────────────
 function setMeetingDate(d) {
   const date = new Date(d);
   meetingDate = date.toLocaleDateString('en-US', { month:'short', day:'numeric', year:'numeric' });
@@ -573,45 +550,55 @@ function setMeetingDate(d) {
   if (minsUntil > 0 && minsUntil <= 20) document.getElementById('notif').classList.add('vis');
 }
 
+// ── THE KEY FIX: get subject and date first, THEN generate key and load ───────
 function initMeeting(item) {
-  meetingKey = getMeetingKey(item);
-
-  // subject can be a string (read mode) or an object with getAsync (compose mode)
-  if (item.subject && typeof item.subject.getAsync === 'function') {
-    item.subject.getAsync(r => {
-      if (r.status === Office.AsyncResultStatus.Succeeded) {
-        meetingTitle = r.value || 'Untitled meeting';
-      } else {
-        meetingTitle = 'Untitled meeting';
-      }
-      document.getElementById('noteTitle').textContent = meetingTitle;
-      meetingKey = getMeetingKey(item);
-    });
-  } else {
-    meetingTitle = (typeof item.subject === 'string' ? item.subject : null) || 'Untitled meeting';
-    document.getElementById('noteTitle').textContent = meetingTitle;
-  }
-
-  if (item.start) {
-    if (typeof item.start.getAsync === 'function') {
-      item.start.getAsync(r => {
-        if (r.status === Office.AsyncResultStatus.Succeeded) {
-          setMeetingDate(r.value);
-        } else if (item.start instanceof Date) {
-          setMeetingDate(item.start);
-        }
+  const getSubject = (cb) => {
+    if (item.subject && typeof item.subject.getAsync === 'function') {
+      item.subject.getAsync(r => {
+        meetingTitle = (r.status === Office.AsyncResultStatus.Succeeded && r.value) ? r.value : 'Untitled meeting';
+        document.getElementById('noteTitle').textContent = meetingTitle;
+        cb();
       });
-    } else if (item.start instanceof Date) {
-      setMeetingDate(item.start);
+    } else {
+      meetingTitle = (typeof item.subject === 'string' ? item.subject : null) || 'Untitled meeting';
+      document.getElementById('noteTitle').textContent = meetingTitle;
+      cb();
     }
-  }
+  };
 
-  loadLocal();
-  loadFireflies();
-  showScreen('app');
+  const getDate = (cb) => {
+    if (item.start) {
+      if (typeof item.start.getAsync === 'function') {
+        item.start.getAsync(r => {
+          if (r.status === Office.AsyncResultStatus.Succeeded) setMeetingDate(r.value);
+          else if (item.start instanceof Date) setMeetingDate(item.start);
+          cb();
+        });
+      } else if (item.start instanceof Date) {
+        setMeetingDate(item.start);
+        cb();
+      } else { cb(); }
+    } else { cb(); }
+  };
+
+  // Step 1: get subject
+  getSubject(() => {
+    // Step 2: get date
+    getDate(() => {
+      // Step 3: NOW generate stable key with both subject + date known
+      if (item.itemId) {
+        meetingKey = 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+      } else {
+        meetingKey = 'mtg_' + btoa(encodeURIComponent(meetingTitle + '_' + meetingDate)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+      }
+      // Step 4: load note and show app
+      loadLocal();
+      loadFireflies();
+      showScreen('app');
+    });
+  });
 }
 
-// ── Office init ───────────────────────────────────────────────────────────────
 Office.onReady(async (info) => {
   try { currentUserEmail = Office.context.mailbox?.userProfile?.emailAddress || ''; } catch(e) { currentUserEmail = ''; }
 
@@ -620,10 +607,7 @@ Office.onReady(async (info) => {
   if (access.reason === 'trial') showTrialBanner(access.daysLeft);
 
   const item = Office.context.mailbox?.item;
-  if (!item) {
-    showScreen('welcome');
-    return;
-  }
+  if (!item) { showScreen('welcome'); return; }
 
   initMeeting(item);
 });
