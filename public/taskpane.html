@@ -511,11 +511,25 @@ async function pullDraft() {
   btn.style.display = 'none';
 }
 function doSend() {
-  document.getElementById('draftWrap').style.display = 'none'; document.getElementById('draftWrap').innerHTML = '';
-  const btn = document.getElementById('sendBtn'); btn.style.display = 'flex'; btn.disabled = false;
+  // Get draft content
+  const toField = document.querySelector('.draft-val')?.innerText || '';
+  const subjectField = document.querySelectorAll('.draft-val')[2]?.innerText || '';
+  const bodyField = document.querySelector('.draft-body')?.innerText || '';
+
+  // Use Outlook API to create a new email
+  Office.context.mailbox.displayNewMessageForm({
+    toRecipients: toField ? toField.split(';').map(e => e.trim()).filter(Boolean) : [],
+    subject: subjectField,
+    htmlBody: document.querySelector('.draft-body')?.innerHTML || ''
+  });
+
+  // Reset the send panel
+  document.getElementById('draftWrap').style.display = 'none';
+  document.getElementById('draftWrap').innerHTML = '';
+  const btn = document.getElementById('sendBtn');
+  btn.style.display = 'flex';
+  btn.disabled = false;
   btn.innerHTML = '<span style="font-size:14px">📧</span> Pull Fireflies recap into email draft';
-  document.getElementById('sentOk').style.display = 'block';
-  setTimeout(() => document.getElementById('sentOk').style.display = 'none', 4000);
 }
 function copyDraft() { const b = document.querySelector('.draft-body'); if (b) navigator.clipboard.writeText(b.innerText).catch(() => {}); }
 
