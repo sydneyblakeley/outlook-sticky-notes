@@ -267,7 +267,7 @@
         <span style="font-size:14px">📧</span> Pull Fireflies recap into email draft
       </button>
       <div class="draft-wrap" id="draftWrap"></div>
-      <div class="sent-ok" id="sentOk">✓ Draft ready — edit and send!</div>
+      <div class="sent-ok" id="sentOk">✓ Draft opened in Outlook!</div>
     </div>
   </div>
 
@@ -298,6 +298,7 @@ let moreOpen = false;
 let localActions = [];
 let ffData = null;
 let currentUserEmail = '';
+let currentUserName = '';
 
 const CT = {
   yellow:{bg:'#FFF9C4',div:'#f0dc00',ink:'#3a3000',inkl:'#7a6800'},
@@ -324,8 +325,7 @@ function showScreen(name) {
 
 async function checkAccess(email) {
   try {
-    const displayName = Office.context.mailbox?.userProfile?.displayName || '';
-const token = btoa(JSON.stringify({ email: currentUserEmail, name: displayName, iat: Date.now() }));
+    const token = btoa(JSON.stringify({ email, name: currentUserName, iat: Date.now() }));
     const res = await fetch(`${API}/api/subscription`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
@@ -434,7 +434,7 @@ function clearNote() { if (!document.getElementById('editor').innerHTML.trim()) 
 async function loadFireflies() {
   const banner = document.getElementById('ffBanner');
   try {
-    const token = btoa(JSON.stringify({ email: currentUserEmail, iat: Date.now() }));
+    const token = btoa(JSON.stringify({ email: currentUserEmail, name: currentUserName, iat: Date.now() }));
     const params = new URLSearchParams({ meeting_title: meetingTitle, meeting_date: meetingDate });
     const res = await fetch(`${API}/api/fireflies?${params}`, {
       headers: { 'Authorization': `Bearer ${token}` }
@@ -491,16 +491,16 @@ async function pullDraft() {
     const mine = localActions.filter(a => !a.done);
     aiHTML = mine.length ? `<ul class="ebul">${mine.map(a => `<li>${a.text}</li>`).join('')}</ul>` : '<div style="font-size:12px;color:#999">No open action items</div>';
   }
-  const notesHTML = ffData?.summary ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Summary</div><div style="font-size:12px;line-height:1.7;color:#333">${ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
+  const notesHTML = ffData?.summary ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Summary</div><div style="font-size:12px;line-height:1.7;color:#333;white-space:pre-line">${ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
   const attendees = ffData?.attendees || '';
-  const senderName = Office.context.mailbox?.userProfile?.displayName || currentUserEmail.split('@')[0] || 'Sydney';
+  const senderName = currentUserName || currentUserEmail.split('@')[0] || 'Sydney';
   document.getElementById('draftWrap').innerHTML = `
-    <div class="draft-bar"><button class="dt send" onclick="doSend()">Send</button><button class="dt">Discard</button><button class="dt"><b>B</b></button><button class="dt">•—</button><button class="dt">📎</button></div>
-    <div class="draft-field"><span class="draft-lbl">To</span><div class="draft-val" contenteditable="true">${attendees}</div></div>
+    <div class="draft-bar"><button class="dt send" onclick="doSend()">Send</button><button class="dt" onclick="resetSend()">Discard</button><button class="dt"><b>B</b></button><button class="dt">•—</button><button class="dt">📎</button></div>
+    <div class="draft-field"><span class="draft-lbl">To</span><div class="draft-val" id="draftTo" contenteditable="true">${attendees}</div></div>
     <div class="draft-field"><span class="draft-lbl">Cc</span><div class="draft-val" contenteditable="true"></div></div>
-    <div class="draft-field"><span class="draft-lbl">Re</span><div class="draft-val" contenteditable="true">Meeting Notes — ${meetingTitle} — ${meetingDate}</div></div>
+    <div class="draft-field"><span class="draft-lbl">Re</span><div class="draft-val" id="draftSubject" contenteditable="true">Meeting Notes — ${meetingTitle} — ${meetingDate}</div></div>
     <div class="draft-hint">✏ Click anywhere to edit before sending</div>
-    <div class="draft-body" contenteditable="true">
+    <div class="draft-body" id="draftBody" contenteditable="true">
       <div style="min-height:24px;border-bottom:1px dashed #ddd;padding-bottom:6px;margin-bottom:8px;color:#999;font-style:italic;outline:none" contenteditable="true">Hi all,</div>
       <div class="eslbl">Action Items</div>${aiHTML}
       <br><div class="eslbl">Notes</div>${notesHTML}
@@ -510,10 +510,11 @@ async function pullDraft() {
   document.getElementById('draftWrap').style.display = 'block';
   btn.style.display = 'none';
 }
+
 function doSend() {
-  const toVal = document.querySelectorAll('.draft-val')[0]?.innerText?.trim() || '';
-  const subjectVal = document.querySelectorAll('.draft-val')[2]?.innerText?.trim() || '';
-  const bodyHTML = document.querySelector('.draft-body')?.innerHTML || '';
+  const toVal = document.getElementById('draftTo')?.innerText?.trim() || '';
+  const subjectVal = document.getElementById('draftSubject')?.innerText?.trim() || '';
+  const bodyHTML = document.getElementById('draftBody')?.innerHTML || '';
 
   try {
     Office.context.mailbox.displayNewMessageForm({
@@ -521,16 +522,21 @@ function doSend() {
       subject: subjectVal,
       htmlBody: bodyHTML
     });
+    resetSend();
+    document.getElementById('sentOk').style.display = 'block';
+    setTimeout(() => document.getElementById('sentOk').style.display = 'none', 4000);
   } catch(e) {
-    // Fallback — copy to clipboard and notify
-    const bodyText = document.querySelector('.draft-body')?.innerText || '';
+    // Fallback — copy to clipboard
+    const bodyText = document.getElementById('draftBody')?.innerText || '';
     navigator.clipboard.writeText(bodyText).then(() => {
-      alert('Could not open email window directly. Draft copied to clipboard — paste into a new email.');
+      alert('Draft copied to clipboard — paste into a new email.');
     }).catch(() => {
       alert('Please use the Copy button to copy the draft and paste it into a new email.');
     });
   }
+}
 
+function resetSend() {
   document.getElementById('draftWrap').style.display = 'none';
   document.getElementById('draftWrap').innerHTML = '';
   const btn = document.getElementById('sendBtn');
@@ -539,15 +545,7 @@ function doSend() {
   btn.innerHTML = '<span style="font-size:14px">📧</span> Pull Fireflies recap into email draft';
 }
 
-  // Reset the send panel
-  document.getElementById('draftWrap').style.display = 'none';
-  document.getElementById('draftWrap').innerHTML = '';
-  const btn = document.getElementById('sendBtn');
-  btn.style.display = 'flex';
-  btn.disabled = false;
-  btn.innerHTML = '<span style="font-size:14px">📧</span> Pull Fireflies recap into email draft';
-}
-function copyDraft() { const b = document.querySelector('.draft-body'); if (b) navigator.clipboard.writeText(b.innerText).catch(() => {}); }
+function copyDraft() { const b = document.getElementById('draftBody'); if (b) navigator.clipboard.writeText(b.innerText).catch(() => {}); }
 
 function loadHistory() {
   const items = Object.entries(getAllNotes()).filter(([k,v]) => v.html?.trim()).sort((a,b) => new Date(b[1].updated)-new Date(a[1].updated)).slice(0,10);
@@ -581,7 +579,6 @@ function setMeetingDate(d) {
   if (minsUntil > 0 && minsUntil <= 20) document.getElementById('notif').classList.add('vis');
 }
 
-// ── THE KEY FIX: get subject and date first, THEN generate key and load ───────
 function initMeeting(item) {
   const getSubject = (cb) => {
     if (item.subject && typeof item.subject.getAsync === 'function') {
@@ -612,17 +609,13 @@ function initMeeting(item) {
     } else { cb(); }
   };
 
-  // Step 1: get subject
   getSubject(() => {
-    // Step 2: get date
     getDate(() => {
-      // Step 3: NOW generate stable key with both subject + date known
       if (item.itemId) {
         meetingKey = 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
       } else {
         meetingKey = 'mtg_' + btoa(encodeURIComponent(meetingTitle + '_' + meetingDate)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
       }
-      // Step 4: load note and show app
       loadLocal();
       loadFireflies();
       showScreen('app');
@@ -631,7 +624,13 @@ function initMeeting(item) {
 }
 
 Office.onReady(async (info) => {
-  try { currentUserEmail = Office.context.mailbox?.userProfile?.emailAddress || ''; } catch(e) { currentUserEmail = ''; }
+  try {
+    currentUserEmail = Office.context.mailbox?.userProfile?.emailAddress || '';
+    currentUserName = Office.context.mailbox?.userProfile?.displayName || '';
+  } catch(e) {
+    currentUserEmail = '';
+    currentUserName = '';
+  }
 
   const access = await checkAccess(currentUserEmail);
   if (!access.granted) { showScreen('paywall'); return; }
