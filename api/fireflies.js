@@ -43,8 +43,8 @@ function formatSummary(text) {
     .split(/(?<=[.!?])\s+/)
     .map(s => s.trim())
     .filter(s => s.length > 10);
-  if (sentences.length <= 1) return stripTimestamps(text);
-  return sentences.map(s => `• ${stripTimestamps(s)}`).join('\n');
+  if (sentences.length <= 1) return `<p>${stripTimestamps(text)}</p>`;
+  return `<ul>${sentences.map(s => `<li>${stripTimestamps(s)}</li>`).join('')}</ul>`;
 }
 
 // Parse action items from Fireflies format into structured array per person
