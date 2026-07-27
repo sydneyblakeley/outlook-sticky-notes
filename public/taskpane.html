@@ -522,10 +522,35 @@ function resetSend() {
 
 function copyDraft() { const b = document.getElementById('draftBody'); if (b) navigator.clipboard.writeText(b.innerText).catch(() => {}); }
 
+function htmlToCleanText(el) {
+  let text = '';
+  el.childNodes.forEach(node => {
+    if (node.nodeType === 3) {
+      text += node.textContent;
+    } else if (node.nodeName === 'LI') {
+      text += '• ' + (node.innerText || '').trim() + '\n';
+    } else if (node.nodeName === 'UL' || node.nodeName === 'OL') {
+      node.querySelectorAll('li').forEach(li => {
+        text += '• ' + (li.innerText || '').trim() + '\n';
+      });
+      text += '\n';
+    } else if (node.nodeName === 'BR') {
+      text += '\n';
+    } else if (node.nodeName === 'DIV' || node.nodeName === 'P') {
+      const inner = (node.innerText || '').trim();
+      if (inner) text += inner + '\n';
+    } else if (node.innerText) {
+      text += node.innerText + '\n';
+    }
+  });
+  return text.trim();
+}
+
 function copyAndNotify() {
   const b = document.getElementById('draftBody');
   if (!b) return;
-  navigator.clipboard.writeText(b.innerText).then(() => {
+  const text = htmlToCleanText(b);
+  navigator.clipboard.writeText(text).then(() => {
     resetSend();
     document.getElementById('sentOk').style.display = 'block';
     setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
