@@ -124,7 +124,7 @@
     .trial-bar{background:#fff8e1;border-bottom:0.5px solid #ffe082;padding:5px 12px;font-size:10px;color:#856404;text-align:center;flex-shrink:0}
     .eslbl{font-size:13px;font-weight:500;text-decoration:underline;margin:10px 0 5px;color:#333}
     .ename{font-size:12px;font-weight:500;color:#1e4d78;margin:6px 0 2px}
-    .ebul{padding-left:16px;margin:2px 0}
+    .ebul{padding-left:0;margin:2px 0;list-style:none}
     .ebul li{font-size:12px;color:#333;margin:2px 0;line-height:1.5}
   </style>
 </head>
@@ -486,10 +486,10 @@ async function pullDraft() {
   document.getElementById('sentOk').style.display = 'none';
   let aiHTML = '';
   if (ffData && ffData.all_actions && Object.keys(ffData.all_actions).length) {
-    Object.entries(ffData.all_actions).forEach(([name, items]) => { if (!items.length) return; aiHTML += `<div class="ename">@${name}</div><ul class="ebul">${items.map(i => `<li>${i}</li>`).join('')}</ul>`; });
+    Object.entries(ffData.all_actions).forEach(([name, items]) => { if (!items.length) return; aiHTML += `<div class="ename">@${name}</div><ul class="ebul">${items.map(i => `<li>• ${i}</li>`).join('')}</ul>`; });
   } else {
     const mine = localActions.filter(a => !a.done);
-    aiHTML = mine.length ? `<ul class="ebul">${mine.map(a => `<li>${a.text}</li>`).join('')}</ul>` : '<div style="font-size:12px;color:#999">No open action items</div>';
+    aiHTML = mine.length ? `<ul class="ebul">${mine.map(a => `<li>• ${a.text}</li>`).join('')}</ul>` : '<div style="font-size:12px;color:#999">No open action items</div>';
   }
   const notesHTML = (ffData?.detailed_notes || ffData?.summary) ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Notes</div><div style="font-size:12px;line-height:1.7;color:#333">${ffData.detailed_notes || ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
   const attendees = ffData?.attendees || '';
