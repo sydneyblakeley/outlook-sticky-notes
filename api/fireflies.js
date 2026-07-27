@@ -66,20 +66,21 @@ function parseActionItems(actionItemsText, userEmail) {
   });
 
   // Find my action items by matching email name to person name
-  const myName = userEmail ? userEmail.split('@')[0].replace('.', ' ').toLowerCase() : '';
-  let mine = [];
+const myName = userEmail ? userEmail.split('@')[0].replace(/[._]/g, ' ').toLowerCase() : '';
+const myDisplayName = (user.name || '').toLowerCase();
+let mine = [];
 
-  Object.entries(all).forEach(([person, items]) => {
-    const personLower = person.toLowerCase();
-    // Match by first name, last name, or full name
-    const nameParts = myName.split(' ');
-    const matches = nameParts.some(part =>
-      part.length > 2 && personLower.includes(part)
-    );
-    if (matches) {
-      mine = items;
-    }
-  });
+Object.entries(all).forEach(([person, items]) => {
+  const personLower = person.toLowerCase();
+  // Match by email prefix parts OR display name
+  const emailParts = myName.split(' ').filter(p => p.length > 2);
+  const displayParts = myDisplayName.split(' ').filter(p => p.length > 2);
+  const allParts = [...emailParts, ...displayParts];
+  const matches = allParts.some(part => personLower.includes(part));
+  if (matches) {
+    mine = items;
+  }
+});
 
   return { mine, all };
 }
