@@ -324,7 +324,8 @@ function showScreen(name) {
 
 async function checkAccess(email) {
   try {
-    const token = btoa(JSON.stringify({ email, iat: Date.now() }));
+    const displayName = Office.context.mailbox?.userProfile?.displayName || '';
+const token = btoa(JSON.stringify({ email: currentUserEmail, name: displayName, iat: Date.now() }));
     const res = await fetch(`${API}/api/subscription`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
