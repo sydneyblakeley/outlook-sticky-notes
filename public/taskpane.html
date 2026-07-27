@@ -511,17 +511,33 @@ async function pullDraft() {
   btn.style.display = 'none';
 }
 function doSend() {
-  // Get draft content
-  const toField = document.querySelector('.draft-val')?.innerText || '';
-  const subjectField = document.querySelectorAll('.draft-val')[2]?.innerText || '';
-  const bodyField = document.querySelector('.draft-body')?.innerText || '';
+  const toVal = document.querySelectorAll('.draft-val')[0]?.innerText?.trim() || '';
+  const subjectVal = document.querySelectorAll('.draft-val')[2]?.innerText?.trim() || '';
+  const bodyHTML = document.querySelector('.draft-body')?.innerHTML || '';
 
-  // Use Outlook API to create a new email
-  Office.context.mailbox.displayNewMessageForm({
-    toRecipients: toField ? toField.split(';').map(e => e.trim()).filter(Boolean) : [],
-    subject: subjectField,
-    htmlBody: document.querySelector('.draft-body')?.innerHTML || ''
-  });
+  try {
+    Office.context.mailbox.displayNewMessageForm({
+      toRecipients: toVal ? toVal.split(';').map(e => e.trim()).filter(Boolean) : [],
+      subject: subjectVal,
+      htmlBody: bodyHTML
+    });
+  } catch(e) {
+    // Fallback — copy to clipboard and notify
+    const bodyText = document.querySelector('.draft-body')?.innerText || '';
+    navigator.clipboard.writeText(bodyText).then(() => {
+      alert('Could not open email window directly. Draft copied to clipboard — paste into a new email.');
+    }).catch(() => {
+      alert('Please use the Copy button to copy the draft and paste it into a new email.');
+    });
+  }
+
+  document.getElementById('draftWrap').style.display = 'none';
+  document.getElementById('draftWrap').innerHTML = '';
+  const btn = document.getElementById('sendBtn');
+  btn.style.display = 'flex';
+  btn.disabled = false;
+  btn.innerHTML = '<span style="font-size:14px">📧</span> Pull Fireflies recap into email draft';
+}
 
   // Reset the send panel
   document.getElementById('draftWrap').style.display = 'none';
