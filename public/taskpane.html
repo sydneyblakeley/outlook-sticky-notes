@@ -525,7 +525,18 @@ function copyDraft() { const b = document.getElementById('draftBody'); if (b) na
 function copyAndNotify() {
   const b = document.getElementById('draftBody');
   if (!b) return;
-  navigator.clipboard.writeText(b.innerText).then(() => {
+
+  // Clone the body and convert list items to bullet text before copying
+  const clone = b.cloneNode(true);
+  clone.querySelectorAll('li').forEach(li => {
+    li.textContent = '• ' + li.textContent;
+  });
+  clone.querySelectorAll('ul, ol').forEach(list => {
+    list.replaceWith(...list.childNodes);
+  });
+
+  const text = clone.innerText;
+  navigator.clipboard.writeText(text).then(() => {
     resetSend();
     document.getElementById('sentOk').style.display = 'block';
     setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
