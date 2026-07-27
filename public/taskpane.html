@@ -526,23 +526,29 @@ function copyAndNotify() {
   const b = document.getElementById('draftBody');
   if (!b) return;
 
-  // Clone the body and convert list items to bullet text before copying
-  const clone = b.cloneNode(true);
-  clone.querySelectorAll('li').forEach(li => {
-    li.textContent = '• ' + li.textContent;
-  });
-  clone.querySelectorAll('ul, ol').forEach(list => {
-    list.replaceWith(...list.childNodes);
-  });
-
-  const text = clone.innerText;
-  navigator.clipboard.writeText(text).then(() => {
-    resetSend();
-    document.getElementById('sentOk').style.display = 'block';
-    setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
-  }).catch(() => {
-    alert('Please manually select and copy the draft text.');
-  });
+  try {
+    const blob = new Blob([b.innerHTML], { type: 'text/html' });
+    const plainBlob = new Blob([b.innerText], { type: 'text/plain' });
+    const item = new ClipboardItem({ 'text/html': blob, 'text/plain': plainBlob });
+    navigator.clipboard.write([item]).then(() => {
+      resetSend();
+      document.getElementById('sentOk').style.display = 'block';
+      setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
+    }).catch(() => {
+      // Fallback to plain text
+      navigator.clipboard.writeText(b.innerText).then(() => {
+        resetSend();
+        document.getElementById('sentOk').style.display = 'block';
+        setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
+      });
+    });
+  } catch(e) {
+    navigator.clipboard.writeText(b.innerText).then(() => {
+      resetSend();
+      document.getElementById('sentOk').style.display = 'block';
+      setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
+    });
+  }
 }
 
 function loadHistory() {
