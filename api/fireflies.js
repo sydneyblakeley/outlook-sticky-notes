@@ -49,25 +49,41 @@ function formatDetailedNotes(text) {
   let inList = false;
 
   lines.forEach(line => {
-    const stripped = stripTimestamps(line.trim());
+    let stripped = stripTimestamps(line.trim());
     if (!stripped) {
       if (inList) { html += '</ul>'; inList = false; }
       return;
     }
-    // Bold header like **Cash Projection and Equipment Procurement**
-    if (stripped.match(/^\*\*(.+)\*\*$/)) {
+
+    // ## Header (markdown h2)
+    if (stripped.startsWith('## ')) {
       if (inList) { html += '</ul>'; inList = false; }
-      html += `<div style="font-weight:600;font-size:12px;margin:10px 0 4px;color:#1e4d78">${stripped.replace(/\*\*/g, '')}</div>`;
+      const headerText = stripped.replace(/^##\s*/, '').replace(/\*\*/g, '');
+      html += `<div style="font-weight:600;font-size:12px;margin:10px 0 4px;color:#1e4d78">${headerText}</div>`;
     }
-    // Bullet point
+    // # Header (markdown h1)
+    else if (stripped.startsWith('# ')) {
+      if (inList) { html += '</ul>'; inList = false; }
+      const headerText = stripped.replace(/^#\s*/, '').replace(/\*\*/g, '');
+      html += `<div style="font-weight:700;font-size:13px;margin:12px 0 4px;color:#1e4d78">${headerText}</div>`;
+    }
+    // Bold-only line like **Section Title**
+    else if (stripped.match(/^\*\*[^*]+\*\*\s*:?$/)) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<div style="font-weight:600;font-size:12px;margin:10px 0 4px;color:#1e4d78">${stripped.replace(/\*\*/g, '').replace(/:$/, '')}</div>`;
+    }
+    // Bullet point - or •
     else if (stripped.startsWith('- ') || stripped.startsWith('• ')) {
       if (!inList) { html += '<ul style="padding-left:16px;margin:4px 0">'; inList = true; }
-      html += `<li style="font-size:12px;color:#333;margin:3px 0;line-height:1.5">${stripped.replace(/^[-•]\s*/, '')}</li>`;
+      // Strip inline bold markers
+      const itemText = stripped.replace(/^[-•]\s*/, '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html += `<li style="font-size:12px;color:#333;margin:3px 0;line-height:1.5">${itemText}</li>`;
     }
-    // Regular paragraph
+    // Regular paragraph - strip inline bold
     else {
       if (inList) { html += '</ul>'; inList = false; }
-      html += `<p style="font-size:12px;color:#333;margin:4px 0;line-height:1.6">${stripped}</p>`;
+      const paraText = stripped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html += `<p style="font-size:12px;color:#333;margin:4px 0;line-height:1.6">${paraText}</p>`;
     }
   });
 
