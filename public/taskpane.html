@@ -491,7 +491,7 @@ async function pullDraft() {
     const mine = localActions.filter(a => !a.done);
     aiHTML = mine.length ? `<ul class="ebul">${mine.map(a => `<li>${a.text}</li>`).join('')}</ul>` : '<div style="font-size:12px;color:#999">No open action items</div>';
   }
-  const notesHTML = ffData?.summary ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Summary</div><div style="font-size:12px;line-height:1.7;color:#333">${ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
+  const notesHTML = (ffData?.detailed_notes || ffData?.summary) ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Notes</div><div style="font-size:12px;line-height:1.7;color:#333">${ffData.detailed_notes || ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
   const attendees = ffData?.attendees || '';
   const senderName = currentUserName || currentUserEmail.split('@')[0] || 'Sydney';
   document.getElementById('draftWrap').innerHTML = `
@@ -525,30 +525,13 @@ function copyDraft() { const b = document.getElementById('draftBody'); if (b) na
 function copyAndNotify() {
   const b = document.getElementById('draftBody');
   if (!b) return;
-
-  try {
-    const blob = new Blob([b.innerHTML], { type: 'text/html' });
-    const plainBlob = new Blob([b.innerText], { type: 'text/plain' });
-    const item = new ClipboardItem({ 'text/html': blob, 'text/plain': plainBlob });
-    navigator.clipboard.write([item]).then(() => {
-      resetSend();
-      document.getElementById('sentOk').style.display = 'block';
-      setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
-    }).catch(() => {
-      // Fallback to plain text
-      navigator.clipboard.writeText(b.innerText).then(() => {
-        resetSend();
-        document.getElementById('sentOk').style.display = 'block';
-        setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
-      });
-    });
-  } catch(e) {
-    navigator.clipboard.writeText(b.innerText).then(() => {
-      resetSend();
-      document.getElementById('sentOk').style.display = 'block';
-      setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
-    });
-  }
+  navigator.clipboard.writeText(b.innerText).then(() => {
+    resetSend();
+    document.getElementById('sentOk').style.display = 'block';
+    setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
+  }).catch(() => {
+    alert('Please manually select and copy the draft text.');
+  });
 }
 
 function loadHistory() {
