@@ -49,41 +49,40 @@ function formatDetailedNotes(text) {
   let inList = false;
 
   lines.forEach(line => {
-    let stripped = stripTimestamps(line.trim());
-    if (!stripped) {
+    let raw = line.trim();
+    if (!raw) {
       if (inList) { html += '</ul>'; inList = false; }
+      html += '<br>';
       return;
     }
 
-    // ## Header (markdown h2)
-    if (stripped.startsWith('## ')) {
+    // Strip timestamps
+    raw = stripTimestamps(raw);
+    if (!raw) return;
+
+    // ## Section header
+    if (raw.startsWith('## ') || raw.startsWith('# ')) {
       if (inList) { html += '</ul>'; inList = false; }
-      const headerText = stripped.replace(/^##\s*/, '').replace(/\*\*/g, '');
-      html += `<div style="font-weight:600;font-size:12px;margin:10px 0 4px;color:#1e4d78">${headerText}</div>`;
+      const txt = raw.replace(/^#+\s*/, '').replace(/\*\*/g, '');
+      html += `<div style="font-weight:700;font-size:12px;margin:10px 0 3px;color:#1e4d78">${txt}</div>`;
     }
-    // # Header (markdown h1)
-    else if (stripped.startsWith('# ')) {
+    // Bullet: starts with - or •
+    else if (raw.match(/^[-•]\s+/)) {
+      if (!inList) { html += '<ul style="padding-left:16px;margin:3px 0">'; inList = true; }
+      const txt = raw.replace(/^[-•]\s+/, '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html += `<li style="font-size:12px;color:#333;line-height:1.5;margin:2px 0">${txt}</li>`;
+    }
+    // Bold-only line = treat as section header
+    else if (raw.match(/^\*\*[^*]+\*\*:?$/)) {
       if (inList) { html += '</ul>'; inList = false; }
-      const headerText = stripped.replace(/^#\s*/, '').replace(/\*\*/g, '');
-      html += `<div style="font-weight:700;font-size:13px;margin:12px 0 4px;color:#1e4d78">${headerText}</div>`;
+      const txt = raw.replace(/\*\*/g, '').replace(/:$/, '');
+      html += `<div style="font-weight:700;font-size:12px;margin:10px 0 3px;color:#1e4d78">${txt}</div>`;
     }
-    // Bold-only line like **Section Title**
-    else if (stripped.match(/^\*\*[^*]+\*\*\s*:?$/)) {
-      if (inList) { html += '</ul>'; inList = false; }
-      html += `<div style="font-weight:600;font-size:12px;margin:10px 0 4px;color:#1e4d78">${stripped.replace(/\*\*/g, '').replace(/:$/, '')}</div>`;
-    }
-    // Bullet point - or •
-    else if (stripped.startsWith('- ') || stripped.startsWith('• ')) {
-      if (!inList) { html += '<ul style="padding-left:16px;margin:4px 0">'; inList = true; }
-      // Strip inline bold markers
-      const itemText = stripped.replace(/^[-•]\s*/, '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      html += `<li style="font-size:12px;color:#333;margin:3px 0;line-height:1.5">${itemText}</li>`;
-    }
-    // Regular paragraph - strip inline bold
+    // Regular line — inline bold becomes <strong>
     else {
       if (inList) { html += '</ul>'; inList = false; }
-      const paraText = stripped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
-      html += `<p style="font-size:12px;color:#333;margin:4px 0;line-height:1.6">${paraText}</p>`;
+      const txt = raw.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      html += `<p style="font-size:12px;color:#333;margin:3px 0;line-height:1.6">${txt}</p>`;
     }
   });
 
