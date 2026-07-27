@@ -552,7 +552,16 @@ function toggleMore() {
   if (moreOpen) { loadHistory(); document.querySelector('.search-input').value = ''; document.querySelector('.hist-title').textContent = 'Recent notes'; }
 }
 function getMeetingKey(item) {
-  try { if (item.itemId) return 'mtg_'+btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40); return 'mtg_'+btoa(encodeURIComponent((item.subject||'')+'_'+Date.now())).replace(/[^a-zA-Z0-9]/g,'').slice(0,40); } catch(e) { return 'mtg_'+Math.random().toString(36).slice(2); }
+  try {
+    // Read mode — use stable itemId
+    if (item.itemId) return 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+    // Compose mode — use subject + date as stable key (no Date.now())
+    const subject = (typeof item.subject === 'string' ? item.subject : meetingTitle) || 'untitled';
+    const date = meetingDate || '';
+    return 'mtg_' + btoa(encodeURIComponent(subject + '_' + date)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+  } catch(e) {
+    return 'mtg_' + Math.random().toString(36).slice(2);
+  }
 }
 
 // ── Init meeting ──────────────────────────────────────────────────────────────
