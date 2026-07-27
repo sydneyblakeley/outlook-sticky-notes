@@ -493,7 +493,7 @@ async function pullDraft() {
   }
   const notesHTML = ffData?.summary ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Summary</div><div style="font-size:12px;line-height:1.7;color:#333">${ffData.summary}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
   const attendees = ffData?.attendees || '';
-  const senderName = currentUserEmail ? currentUserEmail.split('@')[0] : 'Sydney';
+  const senderName = Office.context.mailbox?.userProfile?.displayName || currentUserEmail.split('@')[0] || 'Sydney';
   document.getElementById('draftWrap').innerHTML = `
     <div class="draft-bar"><button class="dt send" onclick="doSend()">Send</button><button class="dt">Discard</button><button class="dt"><b>B</b></button><button class="dt">•—</button><button class="dt">📎</button></div>
     <div class="draft-field"><span class="draft-lbl">To</span><div class="draft-val" contenteditable="true">${attendees}</div></div>
