@@ -36,8 +36,19 @@ function stripTimestamps(text) {
     .trim();
 }
 
+// Format summary as bullet points instead of a blob
+function formatSummary(text) {
+  if (!text) return '';
+  const sentences = text
+    .split(/(?<=[.!?])\s+/)
+    .map(s => s.trim())
+    .filter(s => s.length > 10);
+  if (sentences.length <= 1) return stripTimestamps(text);
+  return sentences.map(s => `• ${stripTimestamps(s)}`).join('\n');
+}
+
 // Parse action items from Fireflies format into structured array per person
-function parseActionItems(actionItemsText, userEmail) {
+function parseActionItems(actionItemsText, userEmail, userDisplayName) {
   if (!actionItemsText) return { mine: [], all: {} };
 
   const all = {};
@@ -65,22 +76,21 @@ function parseActionItems(actionItemsText, userEmail) {
     }
   });
 
-  // Find my action items by matching email name to person name
-const myName = userEmail ? userEmail.split('@')[0].replace(/[._]/g, ' ').toLowerCase() : '';
-const myDisplayName = (user.name || '').toLowerCase();
-let mine = [];
+  // Find my action items by matching email prefix OR display name
+  const myEmailName = userEmail ? userEmail.split('@')[0].replace(/[._]/g, ' ').toLowerCase() : '';
+  const myDisplayName = (userDisplayName || '').toLowerCase();
+  let mine = [];
 
-Object.entries(all).forEach(([person, items]) => {
-  const personLower = person.toLowerCase();
-  // Match by email prefix parts OR display name
-  const emailParts = myName.split(' ').filter(p => p.length > 2);
-  const displayParts = myDisplayName.split(' ').filter(p => p.length > 2);
-  const allParts = [...emailParts, ...displayParts];
-  const matches = allParts.some(part => personLower.includes(part));
-  if (matches) {
-    mine = items;
-  }
-});
+  Object.entries(all).forEach(([person, items]) => {
+    const personLower = person.toLowerCase();
+    const emailParts = myEmailName.split(' ').filter(p => p.length > 2);
+    const displayParts = myDisplayName.split(' ').filter(p => p.length > 2);
+    const allParts = [...emailParts, ...displayParts];
+    const matches = allParts.some(part => personLower.includes(part));
+    if (matches) {
+      mine = items;
+    }
+  });
 
   return { mine, all };
 }
@@ -91,7 +101,6 @@ function parseNotes(summary) {
 
   const sections = [];
 
-  // Try to extract overview/bullet points
   if (summary.short_summary) {
     sections.push({
       heading: 'Meeting Summary',
@@ -99,7 +108,6 @@ function parseNotes(summary) {
     });
   }
 
-  // Extract action items by person for the email
   if (summary.action_items) {
     sections.push({
       heading: 'ACTION_ITEMS_RAW',
@@ -117,19 +125,16 @@ function findBestMatch(transcripts, meetingTitle, meetingDate) {
   const titleLower = (meetingTitle || '').toLowerCase();
   const targetDate = meetingDate ? new Date(meetingDate) : null;
 
-  // Score each transcript
   const scored = transcripts.map(t => {
     let score = 0;
     const tTitle = (t.title || '').toLowerCase();
     const tDate = t.dateString ? new Date(t.dateString) : null;
 
-    // Title similarity
     const titleWords = titleLower.split(' ').filter(w => w.length > 3);
     titleWords.forEach(word => {
       if (tTitle.includes(word)) score += 2;
     });
 
-    // Date proximity (within 1 day = high score)
     if (targetDate && tDate) {
       const daysDiff = Math.abs((targetDate - tDate) / (1000 * 60 * 60 * 24));
       if (daysDiff < 1) score += 10;
@@ -140,10 +145,8 @@ function findBestMatch(transcripts, meetingTitle, meetingDate) {
     return { transcript: t, score };
   });
 
-  // Sort by score
   scored.sort((a, b) => b.score - a.score);
 
-  // Return best match if score is good enough
   return scored[0].score > 2 ? scored[0].transcript : null;
 }
 
@@ -165,7 +168,6 @@ module.exports = async function handler(req, res) {
     const apiKey = process.env.FIREFLIES_API_KEY;
     if (!apiKey) return res.status(200).json({ found: false, reason: 'Fireflies not configured' });
 
-    // Search Fireflies for recent transcripts matching this meeting
     const searchQuery = `
       query {
         transcripts(limit: 20) {
@@ -205,26 +207,24 @@ module.exports = async function handler(req, res) {
     const ffData = await ffResponse.json();
     const transcripts = ffData?.data?.transcripts || [];
 
-    // Find best matching transcript
     const match = findBestMatch(transcripts, meeting_title, meeting_date);
 
     if (!match) {
       return res.status(200).json({ found: false, reason: 'No matching meeting found in Fireflies' });
     }
 
-    // Parse action items
+    // Parse action items using both email and display name for matching
     const { mine, all } = parseActionItems(
       match.summary?.action_items,
-      user.email
+      user.email,
+      user.name
     );
 
-    // Build attendees list for email
     const attendees = (match.meeting_attendees || [])
       .filter(a => a.email)
       .map(a => a.displayName ? `${a.displayName} <${a.email}>` : a.email)
       .join('; ');
 
-    // Build notes sections
     const notes = parseNotes(match.summary);
 
     return res.status(200).json({
@@ -234,7 +234,7 @@ module.exports = async function handler(req, res) {
       meeting_date: match.dateString,
       my_actions: mine,
       all_actions: all,
-      summary: stripTimestamps(match.summary?.short_summary || ''),
+      summary: formatSummary(match.summary?.short_summary || ''),
       keywords: match.summary?.keywords || [],
       attendees,
       notes,
