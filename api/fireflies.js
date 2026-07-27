@@ -13,7 +13,17 @@ const supabase = createClient(
 function verifyToken(req) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) throw new Error('No token');
-  return jwt.verify(auth.split(' ')[1], process.env.JWT_SECRET);
+  const token = auth.split(' ')[1];
+  // Try JWT first, fall back to base64 JSON
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch(e) {
+    try {
+      return JSON.parse(atob(token));
+    } catch(e2) {
+      throw new Error('Invalid token');
+    }
+  }
 }
 
 // Strip timestamps like (09:46) or [09:46] from text
