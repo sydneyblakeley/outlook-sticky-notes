@@ -522,34 +522,23 @@ function resetSend() {
 
 function copyDraft() { const b = document.getElementById('draftBody'); if (b) navigator.clipboard.writeText(b.innerText).catch(() => {}); }
 
-function htmlToCleanText(el) {
-  let text = '';
-  el.childNodes.forEach(node => {
-    if (node.nodeType === 3) {
-      text += node.textContent;
-    } else if (node.nodeName === 'LI') {
-      text += '• ' + (node.innerText || '').trim() + '\n';
-    } else if (node.nodeName === 'UL' || node.nodeName === 'OL') {
-      node.querySelectorAll('li').forEach(li => {
-        text += '• ' + (li.innerText || '').trim() + '\n';
-      });
-      text += '\n';
-    } else if (node.nodeName === 'BR') {
-      text += '\n';
-    } else if (node.nodeName === 'DIV' || node.nodeName === 'P') {
-      const inner = (node.innerText || '').trim();
-      if (inner) text += inner + '\n';
-    } else if (node.innerText) {
-      text += node.innerText + '\n';
-    }
-  });
-  return text.trim();
-}
-
 function copyAndNotify() {
   const b = document.getElementById('draftBody');
   if (!b) return;
-  const text = htmlToCleanText(b);
+
+  // Walk the DOM and convert to clean plain text
+  function nodeToText(node) {
+    if (node.nodeType === 3) return node.textContent;
+    const tag = node.nodeName;
+    if (tag === 'BR') return '\n';
+    if (tag === 'LI') return '• ' + Array.from(node.childNodes).map(nodeToText).join('').trim() + '\n';
+    if (tag === 'UL' || tag === 'OL') return Array.from(node.childNodes).map(nodeToText).join('') + '\n';
+    const inner = Array.from(node.childNodes).map(nodeToText).join('');
+    if (tag === 'DIV' || tag === 'P') return inner.trim() ? inner.trim() + '\n' : '';
+    return inner;
+  }
+
+  const text = Array.from(b.childNodes).map(nodeToText).join('').replace(/\n{3,}/g, '\n\n').trim();
   navigator.clipboard.writeText(text).then(() => {
     resetSend();
     document.getElementById('sentOk').style.display = 'block';
