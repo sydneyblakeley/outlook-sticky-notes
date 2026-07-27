@@ -1,7 +1,4 @@
 // api/fireflies.js
-// Fetches action items and meeting notes from Fireflies
-// Matches meetings by title and date to Outlook calendar events
-
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
 
@@ -14,7 +11,6 @@ function verifyToken(req) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) throw new Error('No token');
   const token = auth.split(' ')[1];
-  // Try JWT first, fall back to base64 JSON
   try {
     return jwt.verify(token, process.env.JWT_SECRET);
   } catch(e) {
@@ -26,7 +22,6 @@ function verifyToken(req) {
   }
 }
 
-// Strip timestamps like (09:46) or [09:46] from text
 function stripTimestamps(text) {
   if (!text) return '';
   return text
@@ -36,7 +31,6 @@ function stripTimestamps(text) {
     .trim();
 }
 
-// Format summary as bullet points instead of a blob
 function formatSummary(text) {
   if (!text) return '';
   const sentences = text
@@ -47,7 +41,40 @@ function formatSummary(text) {
   return `<ul>${sentences.map(s => `<li>${stripTimestamps(s)}</li>`).join('')}</ul>`;
 }
 
-// Parse action items from Fireflies format into structured array per person
+// Convert Fireflies markdown-style notes to clean HTML
+function formatDetailedNotes(text) {
+  if (!text) return '';
+  const lines = text.split('\n');
+  let html = '';
+  let inList = false;
+
+  lines.forEach(line => {
+    const stripped = stripTimestamps(line.trim());
+    if (!stripped) {
+      if (inList) { html += '</ul>'; inList = false; }
+      return;
+    }
+    // Bold header like **Cash Projection and Equipment Procurement**
+    if (stripped.match(/^\*\*(.+)\*\*$/)) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<div style="font-weight:600;font-size:12px;margin:10px 0 4px;color:#1e4d78">${stripped.replace(/\*\*/g, '')}</div>`;
+    }
+    // Bullet point
+    else if (stripped.startsWith('- ') || stripped.startsWith('• ')) {
+      if (!inList) { html += '<ul style="padding-left:16px;margin:4px 0">'; inList = true; }
+      html += `<li style="font-size:12px;color:#333;margin:3px 0;line-height:1.5">${stripped.replace(/^[-•]\s*/, '')}</li>`;
+    }
+    // Regular paragraph
+    else {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<p style="font-size:12px;color:#333;margin:4px 0;line-height:1.6">${stripped}</p>`;
+    }
+  });
+
+  if (inList) html += '</ul>';
+  return html;
+}
+
 function parseActionItems(actionItemsText, userEmail, userDisplayName) {
   if (!actionItemsText) return { mine: [], all: {} };
 
@@ -58,25 +85,18 @@ function parseActionItems(actionItemsText, userEmail, userDisplayName) {
   lines.forEach(line => {
     line = line.trim();
     if (!line) return;
-
-    // Bold name header like **John Lynch** or **Sydney Zindroski**
     const nameMatch = line.match(/^\*\*(.+?)\*\*$/);
     if (nameMatch) {
       currentPerson = nameMatch[1].trim();
       if (!all[currentPerson]) all[currentPerson] = [];
       return;
     }
-
-    // Action item line
     if (currentPerson && line.length > 3) {
       const cleaned = stripTimestamps(line);
-      if (cleaned.length > 3) {
-        all[currentPerson].push(cleaned);
-      }
+      if (cleaned.length > 3) all[currentPerson].push(cleaned);
     }
   });
 
-  // Find my action items by matching email prefix OR display name
   const myEmailName = userEmail ? userEmail.split('@')[0].replace(/[._]/g, ' ').toLowerCase() : '';
   const myDisplayName = (userDisplayName || '').toLowerCase();
   let mine = [];
@@ -87,38 +107,12 @@ function parseActionItems(actionItemsText, userEmail, userDisplayName) {
     const displayParts = myDisplayName.split(' ').filter(p => p.length > 2);
     const allParts = [...emailParts, ...displayParts];
     const matches = allParts.some(part => personLower.includes(part));
-    if (matches) {
-      mine = items;
-    }
+    if (matches) mine = items;
   });
 
   return { mine, all };
 }
 
-// Parse notes sections from summary into structured format
-function parseNotes(summary) {
-  if (!summary) return [];
-
-  const sections = [];
-
-  if (summary.short_summary) {
-    sections.push({
-      heading: 'Meeting Summary',
-      content: stripTimestamps(summary.short_summary)
-    });
-  }
-
-  if (summary.action_items) {
-    sections.push({
-      heading: 'ACTION_ITEMS_RAW',
-      content: summary.action_items
-    });
-  }
-
-  return sections;
-}
-
-// Find best matching Fireflies transcript for a meeting
 function findBestMatch(transcripts, meetingTitle, meetingDate) {
   if (!transcripts || !transcripts.length) return null;
 
@@ -131,9 +125,7 @@ function findBestMatch(transcripts, meetingTitle, meetingDate) {
     const tDate = t.dateString ? new Date(t.dateString) : null;
 
     const titleWords = titleLower.split(' ').filter(w => w.length > 3);
-    titleWords.forEach(word => {
-      if (tTitle.includes(word)) score += 2;
-    });
+    titleWords.forEach(word => { if (tTitle.includes(word)) score += 2; });
 
     if (targetDate && tDate) {
       const daysDiff = Math.abs((targetDate - tDate) / (1000 * 60 * 60 * 24));
@@ -146,7 +138,6 @@ function findBestMatch(transcripts, meetingTitle, meetingDate) {
   });
 
   scored.sort((a, b) => b.score - a.score);
-
   return scored[0].score > 2 ? scored[0].transcript : null;
 }
 
@@ -180,8 +171,11 @@ module.exports = async function handler(req, res) {
           participants
           summary {
             short_summary
+            overview
+            bullet_gist
             action_items
             keywords
+            notes
           }
           meeting_attendees {
             displayName
@@ -213,7 +207,6 @@ module.exports = async function handler(req, res) {
       return res.status(200).json({ found: false, reason: 'No matching meeting found in Fireflies' });
     }
 
-    // Parse action items using both email and display name for matching
     const { mine, all } = parseActionItems(
       match.summary?.action_items,
       user.email,
@@ -225,7 +218,11 @@ module.exports = async function handler(req, res) {
       .map(a => a.displayName ? `${a.displayName} <${a.email}>` : a.email)
       .join('; ');
 
-    const notes = parseNotes(match.summary);
+    // Use detailed notes if available, fall back to bullet_gist, overview, short_summary
+    const detailedNotes = match.summary?.notes || '';
+    const summaryFallback = formatSummary(
+      match.summary?.bullet_gist || match.summary?.overview || match.summary?.short_summary || ''
+    );
 
     return res.status(200).json({
       found: true,
@@ -234,10 +231,10 @@ module.exports = async function handler(req, res) {
       meeting_date: match.dateString,
       my_actions: mine,
       all_actions: all,
-      summary: formatSummary(match.summary?.short_summary || ''),
+      summary: summaryFallback,
+      detailed_notes: formatDetailedNotes(detailedNotes),
       keywords: match.summary?.keywords || [],
       attendees,
-      notes,
       raw_action_items: match.summary?.action_items || ''
     });
 
