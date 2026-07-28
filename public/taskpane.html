@@ -643,7 +643,7 @@ function copyAndNotify() {
 
   // Walk the DOM and convert to clean plain text
   function nodeToText(node) {
-    if (node.nodeType === 3) return node.textContent;
+    if (node.nodeType === 3) return /^\s*$/.test(node.textContent) ? '' : node.textContent;
     const tag = node.nodeName;
     if (tag === 'BR') return '\n';
     if (tag === 'LI') return '• ' + Array.from(node.childNodes).map(nodeToText).join('').trim() + '\n';
