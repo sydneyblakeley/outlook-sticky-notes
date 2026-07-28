@@ -518,7 +518,7 @@ function loadLocal() {
   renderActions();
 }
 function onType() { document.getElementById('saveStatus').textContent = '…'; clearTimeout(saveTimer); saveTimer = setTimeout(saveLocal, 900); }
-function clearNote() { if (!confirm('Clear this note?')) return; document.getElementById('editor').innerHTML = ''; saveLocal(); }
+function clearNote() { document.getElementById('editor').innerHTML = ''; if (meetingKey) saveLocal(); }
 
 async function loadFireflies() {
   const banner = document.getElementById('ffBanner');
