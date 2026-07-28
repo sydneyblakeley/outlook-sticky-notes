@@ -17,6 +17,8 @@
     .card h3{font-size:15px;font-weight:600;margin-bottom:8px;color:#1e4d78}
     .contact-btn{display:inline-block;background:#1e4d78;color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-size:14px;font-weight:500;margin-top:8px}
     .contact-btn:hover{filter:brightness(.9)}
+    .contact-btn.outline{background:white;color:#1e4d78;border:1px solid #1e4d78}
+    .contact-btn.outline:hover{background:#f0f4ff}
     footer{margin-top:48px;padding-top:16px;border-top:1px solid #eee;font-size:13px;color:#888}
   </style>
 </head>
@@ -28,6 +30,12 @@
     <h3>📧 Contact Support</h3>
     <p>For any questions, issues, or feedback, reach out to us directly. We typically respond within 1 business day.</p>
     <a href="mailto:stickynotes.help@outlook.com" class="contact-btn">Email Support</a>
+  </div>
+
+  <div class="card" style="border-color:#6c3483">
+    <h3 style="color:#6c3483">🔌 Request an Integration</h3>
+    <p>Use a different meeting notetaker like Fathom, Teams Copilot, Otter.ai, or another tool? Let us know what you'd like integrated and we'll prioritize based on demand.</p>
+    <a href="mailto:stickynotes.help@outlook.com?subject=Integration%20Request&body=I'd%20like%20to%20request%20an%20integration%20with%3A%20" class="contact-btn outline">Request an integration →</a>
   </div>
 
   <h2>Frequently Asked Questions</h2>
@@ -44,12 +52,17 @@
 
   <div class="card">
     <h3>How do I connect Fireflies.ai?</h3>
-    <p>A Fireflies.ai account is required for the Pro + Notetaker plan. Once your meeting is recorded and processed by Fireflies, your action items will automatically appear in the Actions tab when you open that meeting in Outlook.</p>
+    <p>A Fireflies.ai account is required for the Pro + Notetaker plan. Once your meeting is recorded and processed by Fireflies, your action items will automatically appear in the Actions tab when you open that meeting in Outlook. Make sure your Fireflies API key is connected in your account settings.</p>
+  </div>
+
+  <div class="card">
+    <h3>My notes disappeared when I reopened a meeting</h3>
+    <p>Notes are saved locally and tied to a specific meeting occurrence. Make sure you're opening the same occurrence (same date and time) that you originally saved the note on. If you're the meeting organizer, open the meeting in edit mode to access your note.</p>
   </div>
 
   <div class="card">
     <h3>Will my notes sync across devices?</h3>
-    <p>Your notes are stored locally in your browser. To access them on another device, use the same browser and Outlook account.</p>
+    <p>Notes are currently stored locally in your browser. To access them on another device, use the same browser and Outlook account. Cross-device sync is on our roadmap.</p>
   </div>
 
   <div class="card">
@@ -64,7 +77,12 @@
 
   <div class="card">
     <h3>My action items aren't importing from Fireflies</h3>
-    <p>Confirm the meeting was recorded and fully processed by Fireflies before opening it in Outlook. Meeting titles must match closely for the import to work. If issues persist, contact support.</p>
+    <p>Confirm the meeting was recorded and fully processed by Fireflies before opening it in Outlook. Meeting titles must match closely for the import to work. Make sure your Fireflies API key is valid. If issues persist, contact support.</p>
+  </div>
+
+  <div class="card">
+    <h3>Can I use Sticky Notes with Teams Copilot or other notetakers?</h3>
+    <p>Currently we support Fireflies.ai for automatic action item import. Integrations with other tools like Teams Copilot, Fathom, and Otter.ai are on our roadmap. <a href="mailto:stickynotes.help@outlook.com?subject=Integration%20Request&body=I'd%20like%20to%20request%20an%20integration%20with%3A%20">Request an integration</a> to help us prioritize.</p>
   </div>
 
   <h2>Pricing</h2>
@@ -72,7 +90,7 @@
     <h3>Pro — $4/month or $40/year</h3>
     <p>Private sticky notes, color coding, history, search, manual action items, and Send Recap email drafts. Includes a 14-day free trial.</p>
     <h3 style="margin-top:14px">Pro + Notetaker — $7/month or $70/year</h3>
-    <p>Everything in Pro, plus automatic action item import from Fireflies.ai, Otter.ai, and Fathom. Includes a 14-day free trial.</p>
+    <p>Everything in Pro, plus automatic action item import from Fireflies.ai. Includes a 14-day free trial.</p>
   </div>
 
   <footer>© 2026 Sticky Notes for Outlook · <a href="/privacy.html">Privacy Policy</a> · <a href="/terms.html">Terms of Service</a></footer>
