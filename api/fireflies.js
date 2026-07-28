@@ -171,6 +171,8 @@ module.exports = async function handler(req, res) {
     const email = (user.email || '').toLowerCase();
     const isFreeAccount = FREE_EMAILS.some(e => e.toLowerCase() === email);
 
+    console.log('[fireflies] email:', email, '| isFreeAccount:', isFreeAccount);
+
     // Look up user's own Fireflies API key from Supabase
     let userApiKey = null;
     if (!isFreeAccount) {
@@ -179,6 +181,7 @@ module.exports = async function handler(req, res) {
         .select('fireflies_api_key')
         .eq('email', email)
         .single();
+      console.log('[fireflies] userData:', userData, '| userError code:', userError?.code);
       // Only use key if record exists and key is set
       if (!userError && userData?.fireflies_api_key) {
         userApiKey = userData.fireflies_api_key;
@@ -188,8 +191,11 @@ module.exports = async function handler(req, res) {
     // Determine which API key to use
     const apiKey = isFreeAccount ? process.env.FIREFLIES_API_KEY : userApiKey;
 
+    console.log('[fireflies] apiKey present:', !!apiKey, '| source:', isFreeAccount ? 'env' : 'supabase');
+
     // No API key = no Fireflies connected
     if (!apiKey) {
+      console.log('[fireflies] no api key found, returning no_api_key');
       return res.status(200).json({ found: false, reason: 'no_api_key' });
     }
 
