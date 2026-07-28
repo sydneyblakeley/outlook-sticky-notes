@@ -479,7 +479,7 @@ async function loadFireflies() {
   const banner = document.getElementById('ffBanner');
   try {
     const token = btoa(JSON.stringify({ email: currentUserEmail, name: currentUserName, iat: Date.now() }));
-    const params = new URLSearchParams({ meeting_title: meetingTitle, meeting_date: meetingDate });
+    const params = new URLSearchParams({ meeting_title: meetingTitle, meeting_date: meetingDate, t: Date.now() });
     const res = await fetch(`${API}/api/fireflies?${params}`, {
       headers: { 'Authorization': `Bearer ${token}` }
     });
