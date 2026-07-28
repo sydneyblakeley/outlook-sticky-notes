@@ -180,13 +180,9 @@ module.exports = async function handler(req, res) {
       .single();
 
     // Fall back to env var only for free-list accounts (Syd's own accounts)
-    const FREE_EMAILS = [
-      'szindroski@maverixhealth.com',
-      'sydneyblakeley@outlook.com',
-      'sblakeley@maverixhealth.com',
-      'stickynotes.testuser@outlook.com',
-      'syd@sydsolutions.org'
-    ];
+const FREE_EMAILS = [
+  'szindroski@maverixhealth.com'
+];
     const isFreeAccount = FREE_EMAILS.some(e => e.toLowerCase() === email);
     const apiKey = userData?.fireflies_api_key || (isFreeAccount ? process.env.FIREFLIES_API_KEY : null);
 
