@@ -123,6 +123,23 @@
     .notif button{font-size:10px;padding:2px 6px;border-radius:3px;border:1px solid rgba(255,255,255,.4);background:transparent;color:white;cursor:pointer}
     .trial-bar{background:#fff8e1;border-bottom:0.5px solid #ffe082;padding:5px 12px;font-size:10px;color:#856404;text-align:center;flex-shrink:0}
     .eslbl{font-size:13px;font-weight:500;text-decoration:underline;margin:10px 0 5px;color:#333}
+    .settings-screen{display:none;flex-direction:column;height:100vh;background:#f0ede6}
+    .settings-screen.vis{display:flex}
+    .settings-hdr{background:#1e4d78;color:white;padding:12px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+    .settings-hdr h2{font-size:14px;font-weight:600;flex:1}
+    .settings-back{font-size:11px;background:rgba(255,255,255,.2);border:none;color:white;padding:4px 10px;border-radius:4px;cursor:pointer}
+    .settings-body{padding:16px;overflow-y:auto;flex:1}
+    .settings-card{background:white;border-radius:8px;padding:14px;margin-bottom:14px;border:0.5px solid #ddd}
+    .settings-card h3{font-size:13px;font-weight:600;color:#1e4d78;margin-bottom:6px}
+    .settings-card p{font-size:11px;color:#666;margin-bottom:10px;line-height:1.5}
+    .settings-input{width:100%;font-size:12px;padding:7px 9px;border:0.5px solid #ddd;border-radius:5px;background:#f9f9f9;color:#333;font-family:monospace}
+    .settings-input:focus{outline:none;border-color:#1e4d78;background:white}
+    .settings-btn{font-size:12px;padding:7px 14px;border-radius:5px;border:none;background:#1e4d78;color:white;cursor:pointer;font-weight:500;margin-top:8px}
+    .settings-btn:hover{filter:brightness(.9)}
+    .settings-status{font-size:11px;margin-top:6px;display:none}
+    .settings-status.ok{color:#2e7d32}
+    .settings-status.err{color:#c62828}
+    .settings-connected{display:inline-block;background:#e8f5e9;color:#2e7d32;border:0.5px solid #a5d6a7;border-radius:12px;padding:2px 10px;font-size:10px;font-weight:500;margin-left:6px}
     .ename{font-size:12px;font-weight:500;color:#1e4d78;margin:6px 0 2px}
     .ebul{padding-left:14px;margin:2px 0}
     .ebul li{font-size:12px;color:#333;margin:2px 0;line-height:1.5}
@@ -185,6 +202,29 @@
     <div>📧 <strong>Send tab</strong> — generate a formatted meeting recap email in seconds</div>
   </div>
   <p style="font-size:11px;color:#888">Your notes are never shared with other attendees. Start a free 14-day trial — no credit card required.</p>
+</div>
+
+<!-- SETTINGS -->
+<div class="settings-screen" id="settingsScreen">
+  <div class="settings-hdr">
+    <button class="settings-back" onclick="closeSettings()">← Back</button>
+    <h2>Settings</h2>
+  </div>
+  <div class="settings-body">
+    <div class="settings-card">
+      <h3>🔥 Fireflies.ai API Key <span class="settings-connected" id="ffConnectedBadge" style="display:none">Connected</span></h3>
+      <p>Enter your Fireflies API key to automatically import action items and meeting notes. Find your key at <strong>fireflies.ai → Integrations → Developer</strong>.</p>
+      <input type="password" class="settings-input" id="ffApiKeyInput" placeholder="Your Fireflies API key…" autocomplete="off"/>
+      <br>
+      <button class="settings-btn" onclick="saveFirefliesKey()">Save API Key</button>
+      <div class="settings-status" id="ffStatus"></div>
+    </div>
+    <div class="settings-card">
+      <h3>🔌 Other Integrations</h3>
+      <p>Want to connect Fathom, Teams Copilot, or another notetaker? Let us know and we'll prioritize based on demand.</p>
+      <a href="mailto:stickynotes.help@outlook.com?subject=Integration%20Request&body=I'd%20like%20to%20request%20an%20integration%20with%3A%20" style="display:inline-block;font-size:12px;color:#1e4d78;font-weight:500">Request an integration →</a>
+    </div>
+  </div>
 </div>
 
 <!-- APP -->
@@ -277,6 +317,9 @@
       <input class="search-input" placeholder="Search past meeting notes…" oninput="doSearch(this.value)">
     </div>
     <div id="histSection">
+      <div style="padding:8px 12px;border-bottom:0.5px solid #eee;display:flex;justify-content:space-between;align-items:center">
+        <span style="font-size:11px;color:#666">⚙️ <span style="cursor:pointer;color:#1e4d78;text-decoration:underline" onclick="openSettings()">Settings & Integrations</span></span>
+      </div>
       <div class="hist-title">Recent notes</div>
       <div id="histList"></div>
     </div>
@@ -314,13 +357,14 @@ function openLink(url) { window.open(url, '_blank'); }
 function dismissFre() { localStorage.setItem(FRE_KEY, '1'); document.getElementById('freTip').style.display = 'none'; }
 
 function showScreen(name) {
-  ['loadingScreen','paywallScreen','welcomeScreen','appScreen'].forEach(id => {
+  ['loadingScreen','paywallScreen','welcomeScreen','appScreen','settingsScreen'].forEach(id => {
     document.getElementById(id).classList.remove('vis');
   });
   if (name === 'loading') document.getElementById('loadingScreen').classList.add('vis');
   if (name === 'paywall') document.getElementById('paywallScreen').classList.add('vis');
   if (name === 'welcome') document.getElementById('welcomeScreen').classList.add('vis');
   if (name === 'app') document.getElementById('appScreen').classList.add('vis');
+  if (name === 'settings') document.getElementById('settingsScreen').classList.add('vis');
 }
 
 async function checkAccess(email) {
@@ -648,6 +692,78 @@ function initMeeting(item) {
       showScreen('app');
     });
   });
+}
+
+// ── Settings ──────────────────────────────────────────────────────────────────
+function openSettings() {
+  // Close more panel first
+  moreOpen = false;
+  document.getElementById('morePanel').classList.remove('vis');
+  document.getElementById('moreTab').textContent = '⋯';
+  // Show settings
+  ['loadingScreen','paywallScreen','welcomeScreen','appScreen'].forEach(id => {
+    document.getElementById(id).classList.remove('vis');
+  });
+  document.getElementById('settingsScreen').classList.add('vis');
+  loadSettingsData();
+}
+
+function closeSettings() {
+  document.getElementById('settingsScreen').classList.remove('vis');
+  document.getElementById('appScreen').classList.add('vis');
+}
+
+async function loadSettingsData() {
+  try {
+    const token = btoa(JSON.stringify({ email: currentUserEmail, name: currentUserName, iat: Date.now() }));
+    const res = await fetch(`${API}/api/settings`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    });
+    const data = await res.json();
+    if (data.has_fireflies) {
+      document.getElementById('ffApiKeyInput').placeholder = '••••••••••••••••••••••••••• (saved)';
+      document.getElementById('ffConnectedBadge').style.display = 'inline-block';
+    }
+  } catch(e) {}
+}
+
+async function saveFirefliesKey() {
+  const key = document.getElementById('ffApiKeyInput').value.trim();
+  const status = document.getElementById('ffStatus');
+  status.style.display = 'none';
+
+  if (!key) {
+    status.textContent = 'Please enter your API key.';
+    status.className = 'settings-status err';
+    status.style.display = 'block';
+    return;
+  }
+
+  try {
+    const token = btoa(JSON.stringify({ email: currentUserEmail, name: currentUserName, iat: Date.now() }));
+    const res = await fetch(`${API}/api/settings`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ fireflies_api_key: key })
+    });
+    const data = await res.json();
+    if (data.success) {
+      status.textContent = '✓ API key saved successfully!';
+      status.className = 'settings-status ok';
+      status.style.display = 'block';
+      document.getElementById('ffConnectedBadge').style.display = 'inline-block';
+      document.getElementById('ffApiKeyInput').value = '';
+      document.getElementById('ffApiKeyInput').placeholder = '••••••••••••••••••••••••••• (saved)';
+      // Reset ffData so it re-fetches with new key
+      ffData = null;
+    } else {
+      throw new Error('Save failed');
+    }
+  } catch(e) {
+    status.textContent = 'Failed to save. Please try again.';
+    status.className = 'settings-status err';
+    status.style.display = 'block';
+  }
 }
 
 Office.onReady(async (info) => {
