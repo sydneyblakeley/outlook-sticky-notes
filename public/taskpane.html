@@ -539,7 +539,7 @@ async function pullDraft() {
   const attendees = ffData?.attendees || '';
   const senderName = currentUserName || currentUserEmail.split('@')[0] || 'Sydney';
   document.getElementById('draftWrap').innerHTML = `
-    <div class="draft-bar"><button class="dt send" onclick="doSend()">Send</button><button class="dt" onclick="copyAndNotify()">Copy</button><button class="dt" onclick="resetSend()">Discard</button><button class="dt"><b>B</b></button><button class="dt">•—</button><button class="dt">📎</button></div>
+    <div class="draft-bar"><button class="dt send" onclick="copyAndNotify()">Copy</button><button class="dt" onclick="resetSend()">Discard</button><button class="dt"><b>B</b></button><button class="dt">•—</button><button class="dt">📎</button></div>
     <div class="draft-field"><span class="draft-lbl">To</span><div class="draft-val" id="draftTo" contenteditable="true">${attendees}</div></div>
     <div class="draft-field"><span class="draft-lbl">Cc</span><div class="draft-val" contenteditable="true"></div></div>
     <div class="draft-field"><span class="draft-lbl">Re</span><div class="draft-val" id="draftSubject" contenteditable="true">Meeting Notes — ${meetingTitle} — ${meetingDate}</div></div>
@@ -550,7 +550,7 @@ async function pullDraft() {
       <br><div class="eslbl">Notes</div>${notesHTML}
       <br><div>Thanks,</div><div>${senderName}</div>
     </div>
-    <div class="draft-foot"><button class="dfb s" onclick="doSend()">📧 Send to all</button><button class="dfb c" onclick="copyAndNotify()">📋 Copy</button></div>`;
+    <div class="draft-foot"><button class="dfb s" onclick="copyAndNotify()">📋 Copy draft to clipboard</button></div>`;
   document.getElementById('draftWrap').style.display = 'block';
   btn.style.display = 'none';
 }
