@@ -153,7 +153,7 @@ function findBestMatch(transcripts, meetingTitle, meetingDate) {
   });
 
   scored.sort((a, b) => b.score - a.score);
-  return scored[0].score > 2 ? scored[0].transcript : null;
+  return scored[0].score > 6 ? scored[0].transcript : null;
 }
 
 module.exports = async function handler(req, res) {
