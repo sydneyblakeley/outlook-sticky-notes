@@ -654,13 +654,28 @@ function copyAndNotify() {
   }
 
   const text = Array.from(b.childNodes).map(nodeToText).join('').replace(/\n{3,}/g, '\n\n').trim();
-  navigator.clipboard.writeText(text).then(() => {
+  const html = b.innerHTML;
+
+  const finish = () => {
     resetSend();
     document.getElementById('sentOk').style.display = 'block';
     setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
-  }).catch(() => {
-    alert('Please manually select and copy the draft text.');
-  });
+  };
+  const fallbackToPlainText = () => {
+    navigator.clipboard.writeText(text).then(finish).catch(() => {
+      alert('Please manually select and copy the draft text.');
+    });
+  };
+
+  if (navigator.clipboard && window.ClipboardItem) {
+    const item = new ClipboardItem({
+      'text/plain': new Blob([text], { type: 'text/plain' }),
+      'text/html': new Blob([html], { type: 'text/html' })
+    });
+    navigator.clipboard.write([item]).then(finish).catch(fallbackToPlainText);
+  } else {
+    fallbackToPlainText();
+  }
 }
 
 function loadHistory() {
