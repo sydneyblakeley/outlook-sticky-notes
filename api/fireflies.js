@@ -171,8 +171,26 @@ module.exports = async function handler(req, res) {
   if (!meeting_title) return res.status(400).json({ error: 'Missing meeting_title' });
 
   try {
-    const apiKey = process.env.FIREFLIES_API_KEY;
-    if (!apiKey) return res.status(200).json({ found: false, reason: 'Fireflies not configured' });
+    // Get user's own Fireflies API key from Supabase
+    const email = (user.email || '').toLowerCase();
+    const { data: userData } = await supabase
+      .from('users')
+      .select('fireflies_api_key')
+      .eq('email', email)
+      .single();
+
+    // Fall back to env var only for free-list accounts (Syd's own accounts)
+    const FREE_EMAILS = [
+      'szindroski@maverixhealth.com',
+      'sydneyblakeley@outlook.com',
+      'sblakeley@maverixhealth.com',
+      'stickynotes.testuser@outlook.com',
+      'syd@sydsolutions.org'
+    ];
+    const isFreeAccount = FREE_EMAILS.some(e => e.toLowerCase() === email);
+    const apiKey = userData?.fireflies_api_key || (isFreeAccount ? process.env.FIREFLIES_API_KEY : null);
+
+    if (!apiKey) return res.status(200).json({ found: false, reason: 'no_api_key' });
 
     const searchQuery = `
       query {
