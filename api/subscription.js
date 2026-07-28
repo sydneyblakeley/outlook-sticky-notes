@@ -7,7 +7,7 @@ const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SER
 const TRIAL_DAYS = 14;
 const FREE_EMAILS = [
   'szindroski@maverixhealth.com',
-  'sydneyblakeley@outlook.com',
+  'syd@sydsolutions.org',
   'stickynotes.testuser@outlook.com',
   'admin@a830edad90508491205202619.onmicrosoft.com',
   'admin@a830edad90508491205202621.onmicrosoft.com',
