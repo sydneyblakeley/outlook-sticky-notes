@@ -260,12 +260,15 @@
     </div>
   </div>
 
-  <!-- SEND PANE -->
-  <div class="pane" id="pane-send">
-    <div class="send-wrap">
-      <button class="send-btn" id="sendBtn" onclick="pullDraft()">
-        <span style="font-size:14px">📧</span> Pull Fireflies recap into email draft
-      </button>
+<!-- SEND PANE -->
+<div class="pane" id="pane-send">
+  <div class="send-wrap">
+    <button class="send-btn" id="sendBtn" onclick="pullDraft()">
+      <span style="font-size:14px">📧</span> Pull Fireflies recap into email draft
+    </button>
+    <div style="text-align:center;margin-top:4px">
+      <a href="mailto:stickynotes.help@outlook.com?subject=Integration%20Request&body=I'd%20like%20to%20request%20an%20integration%20with%3A%20" style="font-size:11px;color:#888;text-decoration:underline;cursor:pointer">Use a different notetaker? Request an integration →</a>
+    </div>
       <div class="draft-wrap" id="draftWrap"></div>
       <div class="sent-ok" id="sentOk">✓ Draft copied — paste into a new email to send!</div>
     </div>
