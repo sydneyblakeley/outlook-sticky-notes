@@ -7,6 +7,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
+// Only accounts that have szindroski's Fireflies key in the env var
+const FREE_EMAILS = [
+  'szindroski@maverixhealth.com'
+];
+
 function verifyToken(req) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) throw new Error('No token');
@@ -41,7 +46,6 @@ function formatSummary(text) {
   return `<ul>${sentences.map(s => `<li>${stripTimestamps(s)}</li>`).join('')}</ul>`;
 }
 
-// Convert Fireflies markdown-style notes to clean HTML
 function formatDetailedNotes(text) {
   if (!text) return '';
   const lines = text.split('\n');
@@ -49,39 +53,30 @@ function formatDetailedNotes(text) {
   let inList = false;
 
   lines.forEach(line => {
-    let raw = line.trim();
-    if (!raw) {
+    let stripped = stripTimestamps(line.trim());
+    if (!stripped) {
       if (inList) { html += '</ul>'; inList = false; }
       html += '<br>';
       return;
     }
 
-    // Strip timestamps
-    raw = stripTimestamps(raw);
-    if (!raw) return;
-
-    // ## Section header
-    if (raw.startsWith('## ') || raw.startsWith('# ')) {
+    if (stripped.startsWith('## ') || stripped.startsWith('# ')) {
       if (inList) { html += '</ul>'; inList = false; }
-      const txt = raw.replace(/^#+\s*/, '').replace(/\*\*/g, '');
+      const txt = stripped.replace(/^#+\s*/, '').replace(/\*\*/g, '');
       html += `<div style="font-weight:700;font-size:12px;margin:10px 0 3px;color:#1e4d78">${txt}</div>`;
     }
-    // Bullet: starts with - or •
-    else if (raw.match(/^[-•]\s+/)) {
+    else if (stripped.match(/^\*\*[^*]+\*\*:?$/)) {
+      if (inList) { html += '</ul>'; inList = false; }
+      html += `<div style="font-weight:700;font-size:12px;margin:10px 0 3px;color:#1e4d78">${stripped.replace(/\*\*/g, '').replace(/:$/, '')}</div>`;
+    }
+    else if (stripped.match(/^[-•]\s+/)) {
       if (!inList) { html += '<ul style="padding-left:16px;margin:3px 0">'; inList = true; }
-      const txt = raw.replace(/^[-•]\s+/, '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      const txt = stripped.replace(/^[-•]\s+/, '').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
       html += `<li style="font-size:12px;color:#333;line-height:1.5;margin:2px 0">${txt}</li>`;
     }
-    // Bold-only line = treat as section header
-    else if (raw.match(/^\*\*[^*]+\*\*:?$/)) {
-      if (inList) { html += '</ul>'; inList = false; }
-      const txt = raw.replace(/\*\*/g, '').replace(/:$/, '');
-      html += `<div style="font-weight:700;font-size:12px;margin:10px 0 3px;color:#1e4d78">${txt}</div>`;
-    }
-    // Regular line — inline bold becomes <strong>
     else {
       if (inList) { html += '</ul>'; inList = false; }
-      const txt = raw.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+      const txt = stripped.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
       html += `<p style="font-size:12px;color:#333;margin:3px 0;line-height:1.6">${txt}</p>`;
     }
   });
@@ -171,22 +166,30 @@ module.exports = async function handler(req, res) {
   if (!meeting_title) return res.status(400).json({ error: 'Missing meeting_title' });
 
   try {
-    // Get user's own Fireflies API key from Supabase
     const email = (user.email || '').toLowerCase();
-    const { data: userData } = await supabase
-      .from('users')
-      .select('fireflies_api_key')
-      .eq('email', email)
-      .single();
-
-    // Fall back to env var only for free-list accounts (Syd's own accounts)
-const FREE_EMAILS = [
-  'szindroski@maverixhealth.com'
-];
     const isFreeAccount = FREE_EMAILS.some(e => e.toLowerCase() === email);
-    const apiKey = userData?.fireflies_api_key || (isFreeAccount ? process.env.FIREFLIES_API_KEY : null);
 
-    if (!apiKey) return res.status(200).json({ found: false, reason: 'no_api_key' });
+    // Look up user's own Fireflies API key from Supabase
+    let userApiKey = null;
+    if (!isFreeAccount) {
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('fireflies_api_key')
+        .eq('email', email)
+        .single();
+      // Only use key if record exists and key is set
+      if (!userError && userData?.fireflies_api_key) {
+        userApiKey = userData.fireflies_api_key;
+      }
+    }
+
+    // Determine which API key to use
+    const apiKey = isFreeAccount ? process.env.FIREFLIES_API_KEY : userApiKey;
+
+    // No API key = no Fireflies connected
+    if (!apiKey) {
+      return res.status(200).json({ found: false, reason: 'no_api_key' });
+    }
 
     const searchQuery = `
       query {
@@ -247,7 +250,6 @@ const FREE_EMAILS = [
       .map(a => a.displayName ? `${a.displayName} <${a.email}>` : a.email)
       .join('; ');
 
-    // Use detailed notes if available, fall back to bullet_gist, overview, short_summary
     const detailedNotes = match.summary?.notes || '';
     const summaryFallback = formatSummary(
       match.summary?.bullet_gist || match.summary?.overview || match.summary?.short_summary || ''
