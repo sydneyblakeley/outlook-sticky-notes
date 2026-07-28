@@ -262,8 +262,8 @@
           <button class="tb" onmousedown="fmt(event,'italic')"><i>I</i></button>
           <button class="tb" onmousedown="fmt(event,'underline')"><u>U</u></button>
           <div class="tbsep"></div>
-          <button class="tb" onmousedown="fmt(event,'insertUnorderedList')">•—</button>
-          <button class="tb" onmousedown="fmt(event,'insertOrderedList')">1—</button>
+          <button class="tb" onmousedown="insertBullet(event)">•—</button>
+          <button class="tb" onmousedown="insertNumbered(event)">1—</button>
           <div class="tbsep"></div>
           <button class="tb" onmousedown="fmtHL(event)" style="font-size:10px">▌HL</button>
         </div>
@@ -409,6 +409,51 @@ function applyTheme(c) {
 }
 function setColor(c) { currentColor = c; applyTheme(c); saveLocal(); }
 function fmt(ev, cmd) { ev.preventDefault(); document.execCommand(cmd, false, null); }
+
+function insertBullet(ev) {
+  ev.preventDefault();
+  const editor = document.getElementById('editor');
+  editor.focus();
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  // Check if we're already in a list item
+  let node = range.startContainer;
+  if (node.nodeType === 3) node = node.parentElement;
+  if (node.closest && node.closest('li')) {
+    // Already in list — use execCommand to exit
+    document.execCommand('insertUnorderedList', false, null);
+    return;
+  }
+  // Try execCommand first, fall back to manual
+  const before = editor.innerHTML;
+  document.execCommand('insertUnorderedList', false, null);
+  if (editor.innerHTML !== before) return; // worked
+  // Manual fallback — insert bullet character
+  document.execCommand('insertText', false, '• ');
+}
+
+function insertNumbered(ev) {
+  ev.preventDefault();
+  const editor = document.getElementById('editor');
+  editor.focus();
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return;
+  const range = sel.getRangeAt(0);
+  let node = range.startContainer;
+  if (node.nodeType === 3) node = node.parentElement;
+  if (node.closest && node.closest('li')) {
+    document.execCommand('insertOrderedList', false, null);
+    return;
+  }
+  const before = editor.innerHTML;
+  document.execCommand('insertOrderedList', false, null);
+  if (editor.innerHTML !== before) return;
+  // Manual fallback — insert number
+  const lines = editor.innerText.split('\n').filter(l => l.startsWith('1. ') || l.match(/^\d+\. /));
+  const num = lines.length + 1;
+  document.execCommand('insertText', false, `${num}. `);
+}
 function fmtHL(ev) {
   ev.preventDefault();
   const sel = window.getSelection();
@@ -473,7 +518,7 @@ function loadLocal() {
   renderActions();
 }
 function onType() { document.getElementById('saveStatus').textContent = '…'; clearTimeout(saveTimer); saveTimer = setTimeout(saveLocal, 900); }
-function clearNote() { if (!document.getElementById('editor').innerHTML.trim()) return; if (!confirm('Clear this note?')) return; document.getElementById('editor').innerHTML = ''; saveLocal(); }
+function clearNote() { if (!confirm('Clear this note?')) return; document.getElementById('editor').innerHTML = ''; saveLocal(); }
 
 async function loadFireflies() {
   const banner = document.getElementById('ffBanner');
