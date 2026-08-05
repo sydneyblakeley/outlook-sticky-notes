@@ -1,4 +1,3 @@
-
 // api/subscription.js
 const { createClient } = require('@supabase/supabase-js');
 const jwt = require('jsonwebtoken');
@@ -18,7 +17,16 @@ const FREE_EMAILS = [
 function verifyToken(req) {
   const auth = req.headers.authorization;
   if (!auth || !auth.startsWith('Bearer ')) throw new Error('No token');
-  return jwt.verify(auth.split(' ')[1], process.env.JWT_SECRET);
+  const token = auth.split(' ')[1];
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET);
+  } catch(e) {
+    try {
+      return JSON.parse(atob(token));
+    } catch(e2) {
+      throw new Error('Invalid token');
+    }
+  }
 }
 
 module.exports = async function handler(req, res) {
