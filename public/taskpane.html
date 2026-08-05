@@ -581,8 +581,9 @@ async function pullDraft() {
     aiHTML = mine.length ? `<ul class="ebul">${mine.map(a => `<li>${a.text}</li>`).join('')}</ul>` : '<div style="font-size:12px;color:#999">No open action items</div>';
   }
   // Fireflies returns detailed_notes/summary as HTML carrying its own inline
-  // styles and heading tags (font sizes, colors). Strip that so it inherits
-  // the draft's own consistent font instead of looking mismatched.
+  // styles, heading tags, and paragraph spacing. Strip that so it inherits
+  // the draft's own font instead of looking mismatched, and control spacing
+  // explicitly rather than relying on Word's default paragraph margins.
   function cleanNotesHTML(html) {
     if (!html) return '';
     const wrap = document.createElement('div');
@@ -591,17 +592,22 @@ async function pullDraft() {
       el.removeAttribute('style');
       el.removeAttribute('class');
       el.removeAttribute('id');
-      if (/^H[1-6]$/.test(el.tagName)) {
-        const label = document.createElement('div');
-        label.style.cssText = 'font-weight:600;font-size:13px;margin:10px 0 3px';
-        label.innerHTML = el.innerHTML;
-        el.replaceWith(label);
-      }
     });
+    wrap.querySelectorAll('h1,h2,h3,h4,h5,h6').forEach(el => {
+      const label = document.createElement('div');
+      label.style.cssText = 'font-weight:600;margin:10px 0 3px';
+      label.innerHTML = el.innerHTML;
+      el.replaceWith(label);
+    });
+    wrap.querySelectorAll('p,div').forEach(el => { el.style.margin = '0 0 6px'; });
+    wrap.querySelectorAll('li').forEach(el => { el.style.margin = '0 0 4px'; });
     return wrap.innerHTML;
   }
   const notesRaw = ffData?.detailed_notes || ffData?.summary;
-  const notesHTML = notesRaw ? `<div style="font-size:12px;line-height:1.7;color:#333">${cleanNotesHTML(notesRaw)}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
+  // No explicit font-size here (px converts to a mismatched pt value once
+  // pasted into Outlook) — leaving it unset matches the Action Items list,
+  // which also has no inline size and renders at Outlook's normal default.
+  const notesHTML = notesRaw ? `<div style="line-height:1.7;color:#333">${cleanNotesHTML(notesRaw)}</div>` : '<div style="color:#999;font-style:italic">Paste or type meeting notes here</div>';
   const attendees = ffData?.attendees || '';
   const senderName = currentUserName || currentUserEmail.split('@')[0] || 'Sydney';
   document.getElementById('draftWrap').innerHTML = `
@@ -612,8 +618,8 @@ async function pullDraft() {
     <div class="draft-hint">✏ Click anywhere to edit before sending</div>
     <div class="draft-body" id="draftBody" contenteditable="true">
       <div style="min-height:24px;border-bottom:1px dashed #ddd;padding-bottom:6px;margin-bottom:8px;color:#999;font-style:italic;outline:none" contenteditable="true">Hi all,</div>
-      <div style="font-weight:600;font-size:13px;text-decoration:underline;margin:10px 0 5px;color:#333">Action Items</div>${aiHTML}
-      <br><div class="eslbl">Notes</div>${notesHTML}
+      <div style="font-weight:600;text-decoration:underline;margin:10px 0 5px;color:#333">Action Items</div>${aiHTML}
+      <br><div style="font-weight:600;text-decoration:underline;margin:10px 0 5px;color:#333">Notes</div>${notesHTML}
       <br><div>Thanks,</div><div>${senderName}</div>
     </div>
     <div class="draft-foot"><button class="dfb s" onclick="copyAndNotify()">📋 Copy draft to clipboard</button></div>`;
