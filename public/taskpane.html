@@ -593,7 +593,7 @@ async function pullDraft() {
       el.removeAttribute('id');
       if (/^H[1-6]$/.test(el.tagName)) {
         const label = document.createElement('div');
-        label.style.cssText = 'font-weight:600;margin:8px 0 3px';
+        label.style.cssText = 'font-weight:600;font-size:13px;margin:10px 0 3px';
         label.innerHTML = el.innerHTML;
         el.replaceWith(label);
       }
@@ -601,7 +601,7 @@ async function pullDraft() {
     return wrap.innerHTML;
   }
   const notesRaw = ffData?.detailed_notes || ffData?.summary;
-  const notesHTML = notesRaw ? `<div style="font-weight:500;font-size:12px;margin:8px 0 4px">Meeting Notes</div><div style="font-size:12px;line-height:1.7;color:#333">${cleanNotesHTML(notesRaw)}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
+  const notesHTML = notesRaw ? `<div style="font-size:12px;line-height:1.7;color:#333">${cleanNotesHTML(notesRaw)}</div>` : '<div style="font-size:12px;color:#999;font-style:italic">Paste or type meeting notes here</div>';
   const attendees = ffData?.attendees || '';
   const senderName = currentUserName || currentUserEmail.split('@')[0] || 'Sydney';
   document.getElementById('draftWrap').innerHTML = `
