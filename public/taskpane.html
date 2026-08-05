@@ -606,23 +606,30 @@ function doSend() {
   const bodyHTML = document.getElementById('draftBody')?.innerHTML || '';
   const toRecipients = toVal ? toVal.split(';').map(e => e.trim()).filter(Boolean) : [];
 
+  const fallback = () => {
+    document.getElementById('sentOk').textContent = "Couldn't open a new message window — copied the draft to your clipboard instead. Paste it into a new email.";
+    copyAndNotify();
+  };
+
   try {
     Office.context.mailbox.displayNewMessageFormAsync({
       toRecipients,
       subject: subjectVal,
       htmlBody: bodyHTML
     }, (result) => {
-      if (result.status === Office.AsyncResultStatus.Succeeded) {
+      // Some Outlook builds report "succeeded" with no window actually opening
+      // (mailbox.item goes null) — guard against that false positive.
+      if (result.status === Office.AsyncResultStatus.Succeeded && Office.context.mailbox.item) {
         resetSend();
         document.getElementById('sentOk').textContent = '✓ Email draft opened — review and send!';
         document.getElementById('sentOk').style.display = 'block';
         setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
       } else {
-        copyAndNotify();
+        fallback();
       }
     });
   } catch(e) {
-    copyAndNotify();
+    fallback();
   }
 }
 
