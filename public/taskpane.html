@@ -601,6 +601,15 @@ async function pullDraft() {
     });
     wrap.querySelectorAll('p,div').forEach(el => { el.style.margin = '0 0 6px'; });
     wrap.querySelectorAll('li').forEach(el => { el.style.margin = '0 0 4px'; });
+    // Fireflies embeds transcript citation timestamps like "(09:11, 16:54)"
+    // inline in the text — strip those, they're internal references, not content.
+    wrap.querySelectorAll('*').forEach(el => {
+      Array.from(el.childNodes).forEach(node => {
+        if (node.nodeType === 3) {
+          node.textContent = node.textContent.replace(/\s*\(\d{1,2}:\d{2}(?:,\s*\d{1,2}:\d{2})*\)/g, '');
+        }
+      });
+    });
     return wrap.innerHTML;
   }
   const notesRaw = ffData?.detailed_notes || ffData?.summary;
