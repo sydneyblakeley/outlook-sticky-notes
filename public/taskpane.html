@@ -250,7 +250,6 @@
           <span class="note-title" id="noteTitle">Loading…</span>
           <span class="note-date" id="noteDate"></span>
         </div>
-        <div id="debugInfo" style="font-size:9px;color:#999;font-family:monospace;word-break:break-all;padding:2px 0;border-bottom:1px dashed #ccc;margin-bottom:4px"></div>
         <div class="note-div"></div>
         <div class="fre-tip" id="freTip">
           📌 <strong>Welcome to Sticky Notes for Outlook!</strong><br>
@@ -813,8 +812,6 @@ function initMeeting(item) {
       } else {
         meetingKey = 'mtg_' + hashStr(meetingTitle + '_' + meetingDate);
       }
-      const dbg = document.getElementById('debugInfo');
-      if (dbg) dbg.textContent = 'DEBUG — itemId: ' + (item.itemId || '(none)') + ' | key: ' + meetingKey + ' | title: ' + meetingTitle + ' | date: ' + meetingDate;
       loadLocal();
       loadFireflies();
       showScreen('app');
