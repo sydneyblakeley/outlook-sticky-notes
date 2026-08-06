@@ -889,17 +889,6 @@ Office.onReady(async (info) => {
   if (!item) { showScreen('welcome'); return; }
 
   initMeeting(item);
-
-  // Without this, the pane only ever initializes once at load time — if it
-  // stays open (pinned) while you click through other meetings, it silently
-  // keeps showing/saving the first meeting's note over every one after it.
-  try {
-    Office.context.mailbox.addHandlerAsync(Office.EventType.ItemChanged, () => {
-      ffData = null;
-      const newItem = Office.context.mailbox?.item;
-      if (newItem) { initMeeting(newItem); } else { showScreen('welcome'); }
-    });
-  } catch(e) { /* ItemChanged not supported in this host; single-meeting sessions still work */ }
 });
 </script>
 </body>
