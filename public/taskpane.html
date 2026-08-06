@@ -509,6 +509,13 @@ function loadLocal() {
     currentColor = note.color || 'yellow';
     localActions = note.actions || [];
   } else {
+    // No saved note for this meeting — explicitly clear the editor rather
+    // than leaving whatever's currently in the DOM. Outlook classic doesn't
+    // always fully reload the task pane's webview on close/reopen, so
+    // without this, a meeting with no note of its own can end up displaying
+    // the previous meeting's note that was never cleared.
+    document.getElementById('editor').innerHTML = '';
+    currentColor = 'yellow';
     localActions = [];
     if (!localStorage.getItem(FRE_KEY)) {
       document.getElementById('freTip').style.display = 'block';
@@ -754,6 +761,10 @@ function setMeetingDate(d) {
 }
 
 function initMeeting(item) {
+  // Reset per-meeting state up front — if the task pane's webview persists
+  // across close/reopen (Outlook classic doesn't always fully destroy it),
+  // this stops a previous meeting's Fireflies data from carrying over.
+  ffData = null;
   const getSubject = (cb) => {
     if (item.subject && typeof item.subject.getAsync === 'function') {
       item.subject.getAsync(r => {
