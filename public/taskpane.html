@@ -334,6 +334,17 @@ const TRIAL_DAYS = 14;
 const FRE_KEY = 'sn_fre_dismissed';
 
 let meetingKey = null;
+// Exchange itemIds share a long common prefix across every item in a
+// mailbox — base64-encoding then truncating to a fixed length only ever
+// captured that shared prefix and threw away the actually-unique part,
+// which is why different meetings were colliding on the same key. This
+// hashes the FULL string instead, so truncation never discards the part
+// that makes it unique.
+function hashStr(str) {
+  let h = 5381;
+  for (let i = 0; i < str.length; i++) { h = ((h << 5) + h) + str.charCodeAt(i); h = h & h; }
+  return Math.abs(h).toString(36) + '_' + str.length;
+}
 let meetingTitle = '';
 let meetingDate = '';
 let currentColor = 'yellow';
@@ -798,9 +809,9 @@ function initMeeting(item) {
   getSubject(() => {
     getDate(() => {
       if (item.itemId) {
-        meetingKey = 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+        meetingKey = 'mtg_' + hashStr(item.itemId);
       } else {
-        meetingKey = 'mtg_' + btoa(encodeURIComponent(meetingTitle + '_' + meetingDate)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+        meetingKey = 'mtg_' + hashStr(meetingTitle + '_' + meetingDate);
       }
       const dbg = document.getElementById('debugInfo');
       if (dbg) dbg.textContent = 'DEBUG — itemId: ' + (item.itemId || '(none)') + ' | key: ' + meetingKey + ' | title: ' + meetingTitle + ' | date: ' + meetingDate;
