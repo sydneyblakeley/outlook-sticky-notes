@@ -786,7 +786,10 @@ function initMeeting(item) {
   getSubject(() => {
     getDate(() => {
       if (item.itemId) {
-        meetingKey = 'mtg_' + btoa(item.itemId).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
+        // Outlook can return the series-level itemId for every occurrence of a
+        // recurring meeting, not a unique ID per instance — fold in the date
+        // too so different occurrences don't collapse onto the same note.
+        meetingKey = 'mtg_' + btoa(encodeURIComponent(item.itemId + '_' + meetingDate)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
       } else {
         meetingKey = 'mtg_' + btoa(encodeURIComponent(meetingTitle + '_' + meetingDate)).replace(/[^a-zA-Z0-9]/g,'').slice(0,40);
       }
