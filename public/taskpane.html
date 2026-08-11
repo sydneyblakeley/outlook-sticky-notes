@@ -669,8 +669,8 @@ function doSend() {
 
   const droppedCount = (toVal ? toVal.split(';').map(e => e.trim()).filter(Boolean).length : 0) - toRecipients.length;
 
-  const fallback = () => {
-    document.getElementById('sentOk').textContent = "Couldn't open a new message window — copied the draft to your clipboard instead. Paste it into a new email.";
+  const fallback = (debugMsg) => {
+    document.getElementById('sentOk').textContent = "Couldn't open a new message window — copied the draft to your clipboard instead. Paste it into a new email." + (debugMsg ? ' [DEBUG: ' + debugMsg + ']' : '');
     copyAndNotify();
   };
 
@@ -680,8 +680,6 @@ function doSend() {
       subject: subjectVal,
       htmlBody: bodyHTML
     }, (result) => {
-      // Some Outlook builds report "succeeded" with no window actually opening
-      // (mailbox.item goes null) — guard against that false positive.
       if (result.status === Office.AsyncResultStatus.Succeeded && Office.context.mailbox.item) {
         resetSend();
         document.getElementById('sentOk').textContent = droppedCount > 0
@@ -690,11 +688,14 @@ function doSend() {
         document.getElementById('sentOk').style.display = 'block';
         setTimeout(() => document.getElementById('sentOk').style.display = 'none', 7000);
       } else {
-        fallback();
+        // TEMPORARY DIAGNOSTIC — shows exactly why the call failed instead of
+        // just silently falling back, so we can see the real cause.
+        const errInfo = result.error ? `code=${result.error.code} name=${result.error.name} msg=${result.error.message}` : `status=${result.status}, no error object`;
+        fallback(errInfo);
       }
     });
   } catch(e) {
-    fallback();
+    fallback('exception: ' + (e && e.message ? e.message : String(e)));
   }
 }
 
