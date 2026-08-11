@@ -638,7 +638,7 @@ async function pullDraft() {
   const attendees = ffData?.attendees || '';
   const senderName = currentUserName || currentUserEmail.split('@')[0] || 'Sydney';
   document.getElementById('draftWrap').innerHTML = `
-    <div class="draft-bar">${(typeof Office.context.mailbox.displayNewMessageFormAsync === 'function') ? '<button class="dt send" onclick="doSend()">Send</button>' : ''}<button class="dt${(typeof Office.context.mailbox.displayNewMessageFormAsync === 'function') ? '' : ' send'}" onclick="copyAndNotify()">Copy</button><button class="dt" onclick="resetSend()">Discard</button></div>
+    <div class="draft-bar"><button class="dt send" onclick="doSend()">Send</button><button class="dt" onclick="copyAndNotify()">Copy</button><button class="dt" onclick="resetSend()">Discard</button></div>
     <div class="draft-field"><span class="draft-lbl">To</span><div class="draft-val" id="draftTo" contenteditable="true">${attendees}</div></div>
     <div class="draft-field"><span class="draft-lbl">Cc</span><div class="draft-val" contenteditable="true"></div></div>
     <div class="draft-field"><span class="draft-lbl">Re</span><div class="draft-val" id="draftSubject" contenteditable="true">Meeting Notes — ${meetingTitle} — ${meetingDate}</div></div>
