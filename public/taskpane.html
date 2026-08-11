@@ -549,8 +549,15 @@ async function loadFireflies() {
     const data = await res.json();
     if (data.found && data.my_actions && data.my_actions.length > 0) {
       ffData = data;
-      const existing = localActions.filter(a => a.source === 'fireflies');
-      if (existing.length === 0) { data.my_actions.forEach(text => localActions.push({ text, done: false, source: 'fireflies' })); saveLocal(); }
+      // Refresh Fireflies-sourced items with the latest fetch rather than
+      // skipping whenever any already exist — otherwise a stale saved item
+      // (e.g. from before a server-side fix) permanently blocks new,
+      // corrected results from ever being added.
+      const oldFF = localActions.filter(a => a.source === 'fireflies');
+      const oldDoneMap = new Map(oldFF.map(a => [a.text, a.done]));
+      localActions = localActions.filter(a => a.source !== 'fireflies');
+      data.my_actions.forEach(text => localActions.push({ text, done: oldDoneMap.get(text) || false, source: 'fireflies' }));
+      saveLocal();
       banner.className = 'ff-banner ok';
       banner.textContent = `🔥 ${data.my_actions.length} action item${data.my_actions.length > 1 ? 's' : ''} imported from Fireflies`;
       renderActions();
