@@ -658,7 +658,16 @@ function doSend() {
   const toVal = document.getElementById('draftTo')?.innerText?.trim() || '';
   const subjectVal = document.getElementById('draftSubject')?.innerText?.trim() || '';
   const bodyHTML = document.getElementById('draftBody')?.innerHTML || '';
-  const toRecipients = toVal ? toVal.split(';').map(e => e.trim()).filter(Boolean) : [];
+  // A single malformed entry (a bare name with no email — Fireflies doesn't
+  // always have every attendee's email captured) can make Outlook reject the
+  // whole recipient list, which surfaces as this call failing outright. Only
+  // pass through entries that actually look like an email address.
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const toRecipients = toVal
+    ? toVal.split(';').map(e => e.trim()).filter(Boolean).filter(e => emailPattern.test(e))
+    : [];
+
+  const droppedCount = (toVal ? toVal.split(';').map(e => e.trim()).filter(Boolean).length : 0) - toRecipients.length;
 
   const fallback = () => {
     document.getElementById('sentOk').textContent = "Couldn't open a new message window — copied the draft to your clipboard instead. Paste it into a new email.";
@@ -675,9 +684,11 @@ function doSend() {
       // (mailbox.item goes null) — guard against that false positive.
       if (result.status === Office.AsyncResultStatus.Succeeded && Office.context.mailbox.item) {
         resetSend();
-        document.getElementById('sentOk').textContent = '✓ Email draft opened — review and send!';
+        document.getElementById('sentOk').textContent = droppedCount > 0
+          ? `✓ Email draft opened — ${droppedCount} attendee${droppedCount > 1 ? 's' : ''} without a captured email address ${droppedCount > 1 ? 'were' : 'was'} left off the To field, double-check before sending.`
+          : '✓ Email draft opened — review and send!';
         document.getElementById('sentOk').style.display = 'block';
-        setTimeout(() => document.getElementById('sentOk').style.display = 'none', 5000);
+        setTimeout(() => document.getElementById('sentOk').style.display = 'none', 7000);
       } else {
         fallback();
       }
