@@ -117,7 +117,7 @@ function parseActionItems(actionItemsText, userEmail, userDisplayName) {
     const displayParts = myDisplayName.split(' ').filter(p => p.length > 2);
     const allParts = [...emailParts, ...displayParts];
     const matches = allParts.some(part => personLower.includes(part));
-    if (matches) mine = items;
+    if (matches) mine = mine.concat(items);
   });
 
   return { mine, all };
