@@ -128,27 +128,34 @@ function findBestMatch(transcripts, meetingTitle, meetingDate) {
 
   const titleLower = (meetingTitle || '').toLowerCase();
   const targetDate = meetingDate ? new Date(meetingDate) : null;
+  const titleWords = titleLower.split(' ').filter(w => w.length > 3);
 
   const scored = transcripts.map(t => {
-    let score = 0;
+    let titleScore = 0;
+    let dateScore = 0;
     const tTitle = (t.title || '').toLowerCase();
     const tDate = t.dateString ? new Date(t.dateString) : null;
 
-    const titleWords = titleLower.split(' ').filter(w => w.length > 3);
-    titleWords.forEach(word => { if (tTitle.includes(word)) score += 2; });
+    titleWords.forEach(word => { if (tTitle.includes(word)) titleScore += 2; });
 
     if (targetDate && tDate) {
       const daysDiff = Math.abs((targetDate - tDate) / (1000 * 60 * 60 * 24));
-      if (daysDiff < 1) score += 10;
-      else if (daysDiff < 3) score += 5;
-      else if (daysDiff < 7) score += 2;
+      if (daysDiff < 1) dateScore += 10;
+      else if (daysDiff < 3) dateScore += 5;
+      else if (daysDiff < 7) dateScore += 2;
     }
 
-    return { transcript: t, score };
+    return { transcript: t, score: titleScore + dateScore, titleScore };
   });
 
   scored.sort((a, b) => b.score - a.score);
-  return scored[0].score > 6 ? scored[0].transcript : null;
+  const best = scored[0];
+  // Date proximity alone (even same-day, worth +10) must not be enough on
+  // its own — otherwise any meeting recorded that same day can win purely
+  // by date and pull in a completely unrelated transcript. Require at
+  // least one real title word match before accepting any candidate.
+  if (!best || best.titleScore === 0) return null;
+  return best.score > 6 ? best.transcript : null;
 }
 
 module.exports = async function handler(req, res) {
