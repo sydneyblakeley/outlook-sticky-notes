@@ -11,7 +11,8 @@ const FREE_EMAILS = [
   'admin@a830edad90508491205202619.onmicrosoft.com',
   'admin@a830edad90508491205202621.onmicrosoft.com',
   'admin@a830edad90508490905202614.onmicrosoft.com',
-  'sblakeley@maverixhealth.com'
+  'sblakeley@maverixhealth.com',
+  'jmurphy@scsa.com'
 ];
 
 function verifyToken(req) {
